@@ -1,0 +1,51 @@
+name: Deploy Trading Application
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Récupération du code source
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Vérification de la structure du projet
+      - name: List project structure
+        run: ls -la
+      
+      # Copie du fichier .env si nécessaire (à décommenter si besoin)
+      # - name: Create .env file
+      #   run: |
+      #     echo "${{ secrets.ENV_FILE }}" > .env
+
+      # Test de construction des services avec docker-compose
+      - name: Test docker-compose build
+        run: docker-compose build
+
+      # Connexion et déploiement sur la VM Oracle
+      - name: Deploy to Oracle VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            # Création du répertoire si nécessaire
+            mkdir -p ~/trading_app
+            
+            # Arrêt des conteneurs existants si nécessaire
+            cd ~/trading_app
+            docker-compose down || true
+            
+            # Nettoyage des anciens fichiers
+            rm -rf *
+            
+            # Copie des nouveaux fichiers (vous devrez configurer la synchronisation)
+            # Cette étape devra être adaptée selon votre méthode de transfert de fichiers
+            
+            # Reconstruction et démarrage des conteneurs
+            docker-compose up -d
