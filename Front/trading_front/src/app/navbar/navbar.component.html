@@ -1,0 +1,19 @@
+<nav class="navbar">
+    <div class="navbar-container">
+      <a href="/" class="navbar-item">Home</a>
+      
+      <div class="buy-sell-section">
+        <label for="market-select">Choisir un marché:</label>
+        <select id="market-select" [(ngModel)]="selectedMarket">
+          <option *ngFor="let market of markets" [value]="market">{{ market.name }}</option>
+        </select>
+        
+        <label for="price-input">Prix:</label>
+        <input type="number" id="price-input" [(ngModel)]="price" placeholder="Définissez le prix" />
+  
+        <button (click)="buy()">Acheter</button>
+        <button (click)="sell()">Vendre</button>
+      </div>
+    </div>
+  </nav>
+  

@@ -1,0 +1,73 @@
+name: Deploy Trading Application
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Ajout de debug pour voir l'environnement
+      - name: Debug Information
+        run: |
+          pwd
+          ls -la
+          git --version
+          
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Récupère tout l'historique
+      
+      # Vérifie que le checkout a fonctionné
+      - name: Verify Checkout
+        run: |
+          ls -la
+          echo "Current branch:"
+          git branch --show-current
+
+      - name: Test docker-compose build
+        run: |
+          if [ -f "docker-compose.yml" ]; then
+            echo "Found docker-compose.yml"
+            cat docker-compose.yml
+            docker-compose build
+          else
+            echo "Error: docker-compose.yml not found"
+            exit 1
+          fi
+
+      - name: Copy files to VM
+        if: success()  # Continue seulement si les étapes précédentes ont réussi
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          source: "."
+          target: "~/trading_app"
+          rm: true
+          debug: true  # Active le mode debug
+
+      - name: Deploy to Oracle VM
+        if: success()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            echo "Starting deployment..."
+            cd ~/trading_app
+            ls -la
+            if [ -f "docker-compose.yml" ]; then
+              echo "Found docker-compose.yml"
+              docker-compose down || true
+              docker-compose up -d --build
+              docker ps
+            else
+              echo "Error: docker-compose.yml not found in ~/trading_app"
+              exit 1
+            fi

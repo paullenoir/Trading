@@ -1,0 +1,35 @@
+table {
+    width: auto;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  th, td {
+    padding: 0.25rem;
+    border: 1px solid #ddd;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  th {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  tbody tr:hover {
+    background-color: #ddd;
+  }
+  
+  div {
+    margin-bottom: 20px;
+  }
+
+  .positive-profit {
+    background-color: green;
+    color: white;
+  }
+  
+  .negative-profit {
+    background-color: red;
+    color: white;
+  }

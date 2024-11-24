@@ -1,0 +1,61 @@
+<h2>Historique des Trades pour {{allQueryParams['market']}} avec l'interval {{ allQueryParams['interval'] }} avec la strategie {{ allQueryParams['strategy'] }}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Date Start</th>
+      <th>Date End</th>
+      <th>Strategy Parameter</th>
+      <th>Buy Price</th>
+      <th>Sell Price</th>
+      <th>Dollars Profit</th>
+      <th>Percent Profit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let trade of historiqueTrade" [ngClass]="{ 'positive-profit': !(trade.dollars_profit.startsWith('-')), 'negative-profit': trade.dollars_profit.startsWith('-') }">
+      <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_start | date: 'yyyy-MM-dd') : (trade.date_start | date: 'yyyy-MM-dd HH:mm') }}</td>
+      <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_end | date: 'yyyy-MM-dd') : (trade.date_end | date: 'yyyy-MM-dd HH:mm') }}</td>
+      <td>{{ trade.strategyParameter }}</td>
+      <td>{{ trade.buy_price | number: '1.2-2'}}</td>
+      <td>{{ trade.sell_price | number: '1.2-2'}}</td>
+      <td>{{ trade.dollars_profit | number: '1.2-2'}}</td>
+      <td>{{ trade.percent_profit | number: '1.2-2'}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Graphique de Marché AAPL</h2>
+<div>
+  <apx-chart
+    [series]="chartOptions.series"
+    [chart]="chartOptions.chart"
+    [xaxis]="chartOptions.xaxis"
+    [yaxis]="chartOptions.yaxis"
+    [annotations]="chartOptions.annotations">
+  </apx-chart>
+  </div>
+  <div *ngIf="allQueryParams['strategy'] == 'macd'">
+    <apx-chart 
+      [series]="chartOptionsMACD.series" 
+      [chart]="chartOptionsMACD.chart" 
+      [xaxis]="chartOptionsMACD.xaxis" 
+      [yaxis]="chartOptionsMACD.yaxis"></apx-chart>
+  </div>
+
+  <div *ngIf="allQueryParams['strategy'] == 'rsi'">
+    <apx-chart 
+      [series]="chartOptionsRSI.series" 
+      [chart]="chartOptionsRSI.chart" 
+      [xaxis]="chartOptionsRSI.xaxis" 
+      [yaxis]="chartOptionsRSI.yaxis"></apx-chart>
+  </div>
+  
+  <div *ngIf="allQueryParams['strategy'] == 'stochastic'">
+    <apx-chart 
+      [series]="chartOptionsStochastic.series" 
+      [chart]="chartOptionsStochastic.chart" 
+      [xaxis]="chartOptionsStochastic.xaxis" 
+      [yaxis]="chartOptionsStochastic.yaxis"></apx-chart>
+  </div>
+  
+  
