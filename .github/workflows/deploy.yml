@@ -9,27 +9,39 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Mise à jour de la version de checkout pour utiliser Node 20
+      # Ajout de debug pour voir l'environnement
+      - name: Debug Information
+        run: |
+          pwd
+          ls -la
+          git --version
+          
       - name: Checkout code
-        uses: actions/checkout@v4  # Passage de v2 à v4
-
-      # Vérification de la structure du projet
-      - name: List project structure
-        run: ls -la
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Récupère tout l'historique
       
-      # Test de construction des services avec docker-compose
+      # Vérifie que le checkout a fonctionné
+      - name: Verify Checkout
+        run: |
+          ls -la
+          echo "Current branch:"
+          git branch --show-current
+
       - name: Test docker-compose build
         run: |
           if [ -f "docker-compose.yml" ]; then
+            echo "Found docker-compose.yml"
+            cat docker-compose.yml
             docker-compose build
           else
-            echo "docker-compose.yml not found"
+            echo "Error: docker-compose.yml not found"
             exit 1
           fi
 
-      # Transfert des fichiers via SCP
       - name: Copy files to VM
-        uses: appleboy/scp-action@v0.1.7  # Ajout d'une version spécifique
+        if: success()  # Continue seulement si les étapes précédentes ont réussi
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
@@ -37,25 +49,25 @@ jobs:
           source: "."
           target: "~/trading_app"
           rm: true
-          strip_components: 0
+          debug: true  # Active le mode debug
 
-      # Déploiement sur la VM Oracle
       - name: Deploy to Oracle VM
-        uses: appleboy/ssh-action@v1.0.3  # Ajout d'une version spécifique
+        if: success()
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
+            echo "Starting deployment..."
             cd ~/trading_app
-            
+            ls -la
             if [ -f "docker-compose.yml" ]; then
+              echo "Found docker-compose.yml"
               docker-compose down || true
               docker-compose up -d --build
               docker ps
-              docker image prune -f
             else
-              echo "docker-compose.yml not found in ~/trading_app"
-              ls -la
+              echo "Error: docker-compose.yml not found in ~/trading_app"
               exit 1
             fi
