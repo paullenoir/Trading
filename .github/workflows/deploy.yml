@@ -9,58 +9,53 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Récupération du code source
+      # Mise à jour de la version de checkout pour utiliser Node 20
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4  # Passage de v2 à v4
 
       # Vérification de la structure du projet
       - name: List project structure
         run: ls -la
-
+      
       # Test de construction des services avec docker-compose
       - name: Test docker-compose build
-        run: docker-compose build
+        run: |
+          if [ -f "docker-compose.yml" ]; then
+            docker-compose build
+          else
+            echo "docker-compose.yml not found"
+            exit 1
+          fi
 
-      # Transfert des fichiers avec SCP
-      - name: Transfer files via SCP
-        uses: appleboy/scp-action@master
+      # Transfert des fichiers via SCP
+      - name: Copy files to VM
+        uses: appleboy/scp-action@v0.1.7  # Ajout d'une version spécifique
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source: ".,!node_modules,!.git"
+          source: "."
           target: "~/trading_app"
+          rm: true
+          strip_components: 0
 
       # Déploiement sur la VM Oracle
       - name: Deploy to Oracle VM
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3  # Ajout d'une version spécifique
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            # Création du répertoire si nécessaire
-            mkdir -p ~/trading_app
-
-      # Reconstruction et redémarrage des conteneurs sur la VM
-      - name: Restart Docker containers on Oracle VM
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          script: |
-            # Aller dans le répertoire de l'application
             cd ~/trading_app
-
-            # Arrêter les conteneurs existants
-            docker-compose down || true
-
-            # Reconstruction et démarrage des conteneurs
-            docker-compose up -d --build
             
-            # Vérification du statut des conteneurs
-            docker ps
-            
-            # Nettoyage des images non utilisées
-            docker image prune -f
+            if [ -f "docker-compose.yml" ]; then
+              docker-compose down || true
+              docker-compose up -d --build
+              docker ps
+              docker image prune -f
+            else
+              echo "docker-compose.yml not found in ~/trading_app"
+              ls -la
+              exit 1
+            fi
