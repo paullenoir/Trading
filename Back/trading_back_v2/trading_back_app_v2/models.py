@@ -749,8 +749,8 @@ class TradingResult(models.Model):
             else:
                 # Mettre à jour les champs de l'enregistrement existant
                 existing_record.date_end = result_data.get('date_end', existing_record.date_end)
-                existing_record.strategyParameter = result_data.get('strategyParameter', existing_record.strategyParameter)
-                existing_record.buy_price = result_data.get('buy_price', existing_record.buy_price)
+                # existing_record.strategyParameter = result_data.get('strategyParameter', existing_record.strategyParameter)
+                # existing_record.buy_price = result_data.get('buy_price', existing_record.buy_price)
                 existing_record.sell_price = result_data.get('sell_price', existing_record.sell_price)
                 existing_record.dollars_profit = result_data.get('dollars_profit', existing_record.dollars_profit)
                 existing_record.percent_profit = result_data.get('percent_profit', existing_record.percent_profit)

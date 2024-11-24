@@ -2,6 +2,7 @@ from trading_back_app_v2.models import *
 from trading_back_app_v2.utils import alogorythm_smma
 import pandas_ta as ta #pip install pandas_ta
 import pandas as pd
+import time
 
 def calculate_indicators(market, interval):
     market_price_qs = MarketPrice.objects.filter(market=market, interval_time=interval).order_by('date')
@@ -54,9 +55,9 @@ def calculate_sma(df, market, interval):
         IndicatorSMA.save_sma(ema)
 
 def calculate_ema(df, market, interval):
-    df['SMMA20'] = alogorythm_smma(df, 'close_price', 20)
-    df['SMMA50'] = alogorythm_smma(df, 'close_price', 50)
-    df['SMMA200'] = alogorythm_smma(df, 'close_price', 200)
+    df['EMA20'] = ta.ema(df['close_price'], length=20)
+    df['EMA50'] = ta.ema(df['close_price'], length=50)
+    df['EMA200'] = ta.ema(df['close_price'], length=100)
     for index, row in df.iterrows():
         row = df.loc[index]
         smma = {
@@ -64,9 +65,9 @@ def calculate_ema(df, market, interval):
             "interval_time" : interval,
             "date" :  pd.Timestamp(row['date']).strftime('%Y-%m-%d %H:%M:%S'),
             "close_price" : row['close_price'],
-            "SMMA20": row['SMMA20'],
-            "SMMA50": row['SMMA50'],
-            "SMMA200": row['SMMA200']
+            "EMA20": row['EMA20'],
+            "EMA50": row['EMA50'],
+            "EMA200": row['EMA200']
         }
 
         IndicatorEMA.save_ema(smma)

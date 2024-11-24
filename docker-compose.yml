@@ -1,0 +1,71 @@
+# docker-compose up -d
+# docker-compose down    
+# docker-compose down -v   supprime les donnees
+
+version: '3.9'
+
+services:
+  # Premier service nommé 'db' pour la base de données
+  db:
+    image: postgres:latest
+    restart: always
+    shm_size: '1gb'  # Augmenté pour de meilleures performances
+    volumes:
+      # Volume persistant pour les données
+      - postgres_data:/var/lib/postgresql/data
+      # Volume pour les sauvegardes
+      - postgres_backups:/backups
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      # Port uniquement accessible depuis la VM
+      - "127.0.0.1:5432:5432"
+    networks:
+      - app_network
+    # Vérifie régulièrement si la base de données est opérationnelle
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 60s
+      timeout: 5s
+      retries: 5
+
+  # Deuxième service pour l'interface d'administration de la base de données
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - app_network
+    depends_on:
+      - db
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: nette # Theme plus moderne
+    # Limites de ressources
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+          cpus: '0.5'
+
+    # # Accéder à Adminer
+    #   1. Ouvrir http://<IP_PUBLIQUE_VM>:8080 dans votre navigateur
+    #   # Se connecter avec vos identifiants PostgreSQL
+    #   Système : PostgreSQL
+    #   Serveur : db
+    #   Utilisateur : postgres
+    #   Base de données : postgres
+
+networks:
+  app_network:
+    driver: bridge
+
+# Définition des volumes persistants
+volumes:
+  postgres_data:
+    driver: local    # Utilise le stockage local de la VM
+  postgres_backups:
+    driver: local

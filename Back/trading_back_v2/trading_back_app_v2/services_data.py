@@ -9,6 +9,8 @@ from trading_back_app_v2.indicators import *
 from trading_back_app_v2.strategies import execute_trading
 import time
 
+# python manage.py run_back "1h"
+
 # Fonction pour télécharger les données depuis yfinance
 def download_and_process_data(market: str, interval: str) -> pd.DataFrame:
     print(f"Téléchargement des données pour : {market} avec intervalle {interval}") # Utilise market.symbol ou tout autre champ du modèle Market       

@@ -3,6 +3,8 @@
 import os
 import sys
 
+# python manage.py run_back "1d"
+# python manage.py run_back "1h"
 
 def main():
     """Run administrative tasks."""

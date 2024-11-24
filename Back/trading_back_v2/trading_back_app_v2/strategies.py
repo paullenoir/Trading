@@ -299,21 +299,20 @@ def execute_trading(market, interval):
             if index == df.index[-1]:
                 existing_trade = TradingResult.get_record(market, interval, strategy.get_name())
                 if existing_trade is not None and existing_trade.date_end == "":
-                    if strategy.get_name() == "Tendance":
+                    if strategy.get_name() == "tendance":
                         marketstrategyresult["strategy_tendance_color"] = "green" 
-                    if strategy.get_name() == "BollingerBand":
+                    if strategy.get_name() == "bollingerband":
                         marketstrategyresult["strategy_bb_color"] = "green"
-                    if strategy.get_name() == "RSI":
+                    if strategy.get_name() == "rsi":
                         marketstrategyresult["strategy_rsi_color"] = "green"
-                    if strategy.get_name() == "MACD":
+                    if strategy.get_name() == "macd":
                         marketstrategyresult["strategy_macd_color"] = "green"
-                    if strategy.get_name() == "2MM":
+                    if strategy.get_name() == "2sma":
                         marketstrategyresult["strategy_2sma_color"] = "green"
-                    if strategy.get_name() == "Ichimoku":
+                    if strategy.get_name() == "ichimoku":
                         marketstrategyresult["strategy_ichimoku_color"] = "green"
-                    if strategy.get_name() == "Stochastic":
+                    if strategy.get_name() == "stochastic":
                         marketstrategyresult["strategy_stochastic_color"] = "green"
                     marketstrategyresult["date"] = row['date']
-                
-    print(marketstrategyresult)
+  
     MarketStrategyResult.save_market_strategy_result(marketstrategyresult)
