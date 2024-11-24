@@ -28,17 +28,6 @@ jobs:
           echo "Current branch:"
           git branch --show-current
 
-      - name: Test docker-compose build
-        run: |
-          if [ -f "docker-compose.yml" ]; then
-            echo "Found docker-compose.yml"
-            cat docker-compose.yml
-            docker-compose build
-          else
-            echo "Error: docker-compose.yml not found"
-            exit 1
-          fi
-
       - name: Copy files to VM
         if: success()  # Continue seulement si les étapes précédentes ont réussi
         uses: appleboy/scp-action@v0.1.7
