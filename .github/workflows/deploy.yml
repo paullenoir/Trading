@@ -9,65 +9,52 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Ajout de debug pour voir l'environnement
-      - name: Debug Information
-        run: |
-          pwd
-          ls -la
-          git --version
-          
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Récupère tout l'historique
-      
-      # Vérifie que le checkout a fonctionné
-      - name: Verify Checkout
-        run: |
-          ls -la
-          echo "Current branch:"
-          git branch --show-current
+          fetch-depth: 0
 
-      - name: Test docker-compose build
-        run: |
-          if [ -f "docker-compose.yml" ]; then
-            echo "Found docker-compose.yml"
-            cat docker-compose.yml
-            docker-compose build
-          else
-            echo "Error: docker-compose.yml not found"
-            exit 1
-          fi
+      # Installation de Docker et Docker Compose
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Copy files to VM
-        if: success()  # Continue seulement si les étapes précédentes ont réussi
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source: "."
+          source: 
+            - "."
+            - "!.git"  # Exclure le dossier .git
           target: "~/trading_app"
           rm: true
-          debug: true  # Active le mode debug
+          debug: true
 
       - name: Deploy to Oracle VM
-        if: success()
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            echo "Starting deployment..."
             cd ~/trading_app
-            ls -la
-            if [ -f "docker-compose.yml" ]; then
-              echo "Found docker-compose.yml"
-              docker-compose down || true
-              docker-compose up -d --build
-              docker ps
-            else
-              echo "Error: docker-compose.yml not found in ~/trading_app"
-              exit 1
+            
+            # Installer Docker et Docker Compose si nécessaire
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io docker-compose
             fi
+
+            # Charger les variables d'environnement
+            export $(cat .env | xargs)
+
+            # Arrêter et supprimer les conteneurs existants
+            docker stop $(docker ps -q)
+            docker system prune -f
+
+            # Reconstruire et démarrer les services
+            docker-compose up -d --build
+
+            # Vérifier le statut des conteneurs
+            docker-compose ps
