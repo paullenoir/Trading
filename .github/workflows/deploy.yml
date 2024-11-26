@@ -14,6 +14,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Étape de débogage pour lister les fichiers
+      - name: List files
+        run: |
+          pwd
+          ls -la
+          echo "Current directory contents:"
+          find . -type f
+
       # Installation de Docker et Docker Compose
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -28,6 +36,7 @@ jobs:
             .
             !.git
           target: "~/trading_app"
+          strip_components: 1  # Enlève le répertoire racine du chemin
           rm: true
           debug: true
 
@@ -38,6 +47,8 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
+            pwd
+            ls -la ~/trading_app
             cd ~/trading_app
             
             # Installer Docker et Docker Compose si nécessaire
