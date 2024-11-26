@@ -14,13 +14,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Étape de débogage pour lister les fichiers
-      - name: List files
+      # Étapes de débogage détaillées
+      - name: Detailed file listing
         run: |
           pwd
+          echo "Current directory:"
           ls -la
-          echo "Current directory contents:"
+          echo "-------------------------"
+          echo "Recursive file listing:"
           find . -type f
+          echo "-------------------------"
+          echo "Git status:"
+          git status
+          echo "-------------------------"
+          echo "Checking .gitignore:"
+          cat .gitignore || echo "No .gitignore found"
 
       # Installation de Docker et Docker Compose
       - name: Set up Docker Buildx
