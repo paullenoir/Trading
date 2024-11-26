@@ -24,9 +24,9 @@ jobs:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source: 
-            - "."
-            - "!.git"  # Exclure le dossier .git
+          source: |
+            .
+            !.git
           target: "~/trading_app"
           rm: true
           debug: true
@@ -50,8 +50,7 @@ jobs:
             export $(cat .env | xargs)
 
             # Arrêter et supprimer les conteneurs existants
-            docker stop $(docker ps -q)
-            docker system prune -f
+            docker-compose down --volumes
 
             # Reconstruire et démarrer les services
             docker-compose up -d --build
