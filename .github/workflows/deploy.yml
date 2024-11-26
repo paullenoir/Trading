@@ -14,13 +14,10 @@ jobs:
         with:
           fetch-depth: 0
 
-<<<<<<< HEAD
       # Installation de Docker et Docker Compose
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-=======
->>>>>>> e3ec1438e9f8012666522891a8971f8dbac9995b
       - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
