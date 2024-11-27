@@ -60,26 +60,26 @@ services:
     #   Base de données : postgres
 
   # Service pour le backend Django
-  # back:
-  #   build:
-  #     context: .
-  #     dockerfile: Back/trading_back_v2/dockerfile-back.scheduler  # Chemin vers le Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./Back/trading_back_v2:/app/Back  # Synchronisation du répertoire local
-  #   environment:
-  #     DJANGO_SETTINGS_MODULE: trading_back_v2.settings  # Remplacez par votre fichier de settings
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_HOST: db  # Adresse de la base de données
-  #   ports:
-  #     - "8000:8000"
-  #   networks:
-  #     - app_network
-  #   depends_on:
-  #     - db
-  #   command: ./scheduler-back-entrypoint.sh  # Script d'entrée
+  back:
+    build:
+      context: .
+      dockerfile: Back/trading_back_v2/dockerfile-back.scheduler  # Chemin vers le Dockerfile
+    restart: always
+    volumes:
+      - ./Back/trading_back_v2:/app/Back  # Synchronisation du répertoire local
+    environment:
+      DJANGO_SETTINGS_MODULE: trading_back_v2.settings  # Remplacez par votre fichier de settings
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db  # Adresse de la base de données
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+    depends_on:
+      - db
+    command: ./scheduler-back-entrypoint.sh  # Script d'entrée
 
 networks:
   app_network:

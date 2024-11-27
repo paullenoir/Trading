@@ -28,14 +28,16 @@ jobs:
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: |
             docker-compose.yml
+            .\Back\trading_back_v2\scheduler-back-entrypoint.sh
+            .\Back\trading_back_v2\dockerfile-back
           
           target: "~/trading_app"
           strip_components: 0
           rm: false
           debug: true
 
-      # 3. Exécuter Docker Compose sur la VM distante
-      - name: Deploy Database on VM
+      # 3. Installer Docker Compose sur la VM distante
+      - name: Install Docker and Docker Compose
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
