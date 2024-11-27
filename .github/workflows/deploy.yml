@@ -35,7 +35,17 @@ jobs:
           strip_components: 0
           rm: false
           debug: true
-          verbose: true  # Ajout de cette ligne
+
+      - name: Verify transferred files
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            ls -la ~/trading_app
+            echo "Contenu du dossier Back :"
+            ls -la ~/trading_app/Back/trading_back_v2
 
       # 3. Installer Docker Compose sur la VM distante
       - name: Install Docker and Docker Compose
