@@ -38,7 +38,7 @@ jobs:
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: |
             docker-compose.yml
-            .env
+          
           target: "~/trading_app"
           strip_components: 0
           rm: false
