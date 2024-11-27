@@ -19,6 +19,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Afficher la structure des fichiers pour validation
+      - name: Display repository structure
+        run: |
+          pwd
+          ls -R
+
      # 2. Copier les fichiers necessaire comme docker-compose.yml vers la VM distante
       - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
@@ -27,15 +33,16 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: |
-            docker-compose.yml
-            Back/trading_back_v2/scheduler-back-entrypoint.sh
-            Back/trading_back_v2/dockerfile-back
+            - docker-compose.yml
+            - Back/trading_back_v2/scheduler-back-entrypoint.sh
+            - Back/trading_back_v2/dockerfile-back
           
           target: "~/trading_app"
           strip_components: 0
           rm: false
           debug: true
 
+      # Vérifier les fichiers transférés sur la VM
       - name: Verify transferred files
         uses: appleboy/ssh-action@v0.1.8
         with:
