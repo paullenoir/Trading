@@ -5,25 +5,31 @@ on:
     branches:
       - master
 
+concurrency:
+  group: master
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. Extraire le code dans un envrironnement docker dans github action
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # Lister tous les fichiers avec des détails
-      - name: List all files with details
-        run: |
-          pwd
-          find . -type f -print0 | xargs -0 ls -l
+      # - name: List all files with details
+      #   run: 
+      #     pwd
+      #     find . -type f -print0 | xargs -0 ls -l
 
-      # Installation de Docker et Docker Compose
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # # Installation de Docker et Docker Compose
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
 
+     # 2. Copier les fichiers necessaire comme docker-compose.yml vers la VM distante
       - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -31,38 +37,87 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: |
-            .
-            !.git
+            docker-compose.yml
+            .env
           target: "~/trading_app"
-          strip_components: 1  # Enlève le répertoire racine du chemin
-          rm: true
+          strip_components: 0
+          rm: false
           debug: true
 
-      - name: Deploy to Oracle VM
-        uses: appleboy/ssh-action@v1.0.3
+      # 3. Exécuter Docker Compose sur la VM distante
+      - name: Deploy Database on VM
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            pwd
-            ls -la ~/trading_app
-            cd ~/trading_app
-            
-            # Installer Docker et Docker Compose si nécessaire
-            if ! command -v docker &> /dev/null; then
-              sudo apt-get update
-              sudo apt-get install -y docker.io docker-compose
-            fi
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            docker --version
+            docker-compose --version
 
+      # 4. Charger les variables d'environnement, gérer les conteneurs et déployer
+      - name: Manage containers and deploy services
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
             # Charger les variables d'environnement
-            export $(cat .env | xargs)
+            export $(grep -v '^#' ~/trading_app/.env | xargs)
 
-            # Arrêter et supprimer les conteneurs existants
-            docker-compose down --volumes
+            # Arrêter et supprimer les conteneurs et leurs images (sans supprimer le volume de la BD)
+            cd ~/trading_app
+            docker-compose down --rmi all --volumes --remove-orphans
 
             # Reconstruire et démarrer les services
-            docker-compose up -d --build
+            docker-compose up --build -d
 
-            # Vérifier le statut des conteneurs
-            docker-compose ps
+             # Vérifier le statut des conteneurs
+             docker ps -a
+
+      # - name: Copy files to VM
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.ORACLE_VM_IP }}
+      #     username: ${{ secrets.ORACLE_VM_USER }}
+      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+      #     source: |
+      #       docker-compose.yml
+      #     target: "~/trading_app"
+      #     strip_components: 1  # Enlève le répertoire racine du chemin
+      #     rm: true
+      #     debug: true
+
+      # - name: Deploy to Oracle VM
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.ORACLE_VM_IP }}
+      #     username: ${{ secrets.ORACLE_VM_USER }}
+      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+      #     script: |
+      #       pwd
+      #       ls -la ~/trading_app
+      #       cd ~/trading_app
+            
+      #       # Installer Docker et Docker Compose si nécessaire
+      #       if ! command -v docker &> /dev/null; then
+      #         sudo apt-get update
+      #         sudo apt-get install -y docker.io docker-compose
+      #       fi
+
+      #       # Charger les variables d'environnement
+      #       export $(cat .env | xargs)
+
+      #       # Arrêter et supprimer les conteneurs existants
+      #       docker-compose down --volumes
+
+      #       # Reconstruire et démarrer les services
+      #       docker-compose up -d --build
+
+      #       # Vérifier le statut des conteneurs
+      #       docker-compose ps
