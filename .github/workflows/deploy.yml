@@ -44,8 +44,8 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: 
-            - docker-compose.yml
-            - Back/trading_back_v2/back_image_tag.txt
+            docker-compose.yml
+            Back/trading_back_v2/back_image_tag.txt
           target: "~/trading_app"
           strip_components: 0
           rm: false
