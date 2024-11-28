@@ -32,7 +32,7 @@ jobs:
           # Générer un tag unique avec timestamp
           # export IMAGE_TAG=back-image:$(date +%s)
           # docker build . --file dockerfile-back --tag $IMAGE_TAG
-          docker build -t trading-back -f Back/trading_back_v2/dockerfile-back .
+          docker build -t trading-back -f dockerfile-back .
           
           # Sauvegarder le tag pour une utilisation ultérieure
           # echo "$IMAGE_TAG" > back_image_tag.txt
