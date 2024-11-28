@@ -19,6 +19,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Afficher la structure des fichiers pour validation
+      - name: Display repository structure
+        run: |
+          pwd
+          ls -R
+
       # Construire l'image Docker pour le back
       - name: Build Docker Image Back
         working-directory: Back/trading_back_v2
@@ -29,12 +35,6 @@ jobs:
           
           # Sauvegarder le tag pour une utilisation ultérieure
           echo "$IMAGE_TAG" > back_image_tag.txt
-
-      # Afficher la structure des fichiers pour validation
-      - name: Display repository structure
-        run: |
-          pwd
-          ls -R
 
      # 2. Copier les fichiers necessaires vers la VM distante
       - name: Copy files to VM
