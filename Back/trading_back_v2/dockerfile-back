@@ -1,41 +1,66 @@
 FROM python:3.11-slim
 
 # Définir le répertoire de travail
-WORKDIR /app/Back
+WORKDIR /app/Back/trading_back_v2
 
 # Installation des dépendances système
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
-    cron \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier seulement le requirements.txt d'abord
-COPY Back/requirements.txt .
+COPY Back/trading_back_v2/requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copier le code du dossier Back
-COPY Back/ .
+# Copier tout le code du dossier Back/trading_back_v2
+COPY Back/trading_back_v2 .
 
-# Configuration des tâches cron
-# Exécution horaire
-RUN echo "0 * * * * /usr/local/bin/python /app/Back/manage.py run_back '1h' >> /var/log/cron-hourly.log 2>&1" > /etc/cron.d/django-cron-hourly
-# Exécution journalière
-RUN echo "0 0 * * * /usr/local/bin/python /app/Back/manage.py run_back '1d' >> /var/log/cron-daily.log 2>&1" > /etc/cron.d/django-cron-daily
+# Commande d'entrée par défaut
+CMD ["sh", "-c", "python manage.py makemigrations && \
+                   python manage.py migrate && \
+                   python manage.py collectstatic --noinput && \
+                   exec python manage.py run_back '1d'"]
 
-# Permissions pour les fichiers cron
-RUN chmod 0644 /etc/cron.d/django-cron-hourly
-RUN chmod 0644 /etc/cron.d/django-cron-daily
 
-# Installation des tâches cron
-RUN cat /etc/cron.d/django-cron-hourly /etc/cron.d/django-cron-daily | crontab -
+# FROM python:3.11-slim
 
-# Création des fichiers de log
-RUN touch /var/log/cron-hourly.log
-RUN touch /var/log/cron-daily.log
+# # Définir le répertoire de travail
+# WORKDIR /app/Back
 
-# Script d'entrée pour démarrer cron et suivre les logs
-COPY Back/trading_back_v2/scheduler-back-entrypoint.sh .
-RUN chmod +x scheduler-back-entrypoint.sh
+# # Installation des dépendances système
+# RUN apt-get update && apt-get install -y \
+#     gcc \
+#     libpq-dev \
+#     cron \
+#     && rm -rf /var/lib/apt/lists/*
 
-CMD ["./scheduler-back-entrypoint.sh"]
+# # Copier seulement le requirements.txt d'abord
+# COPY Back/requirements.txt .
+# RUN pip install -r requirements.txt
+
+# # Copier le code du dossier Back
+# COPY Back/trading_back_v2 .
+
+# # Configuration des tâches cron
+# # Exécution horaire
+# RUN echo "0 * * * * /usr/local/bin/python /app/Back/manage.py run_back '1h' >> /var/log/cron-hourly.log 2>&1" > /etc/cron.d/django-cron-hourly
+# # Exécution journalière
+# RUN echo "0 0 * * * /usr/local/bin/python /app/Back/manage.py run_back '1d' >> /var/log/cron-daily.log 2>&1" > /etc/cron.d/django-cron-daily
+
+# # Permissions pour les fichiers cron
+# RUN chmod 0644 /etc/cron.d/django-cron-hourly
+# RUN chmod 0644 /etc/cron.d/django-cron-daily
+
+# # Installation des tâches cron
+# RUN cat /etc/cron.d/django-cron-hourly /etc/cron.d/django-cron-daily | crontab -
+
+# # Création des fichiers de log
+# RUN touch /var/log/cron-hourly.log
+# RUN touch /var/log/cron-daily.log
+
+# # Script d'entrée pour démarrer cron et suivre les logs
+# COPY Back/trading_back_v2/scheduler-back-entrypoint.sh .
+# RUN chmod +x scheduler-back-entrypoint.sh
+
+# CMD ["./scheduler-back-entrypoint.sh"]
