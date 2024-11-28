@@ -30,11 +30,12 @@ jobs:
         working-directory: Back/trading_back_v2
         run: |
           # Générer un tag unique avec timestamp
-          export IMAGE_TAG=back-image:$(date +%s)
-          docker build . --file dockerfile-back --tag $IMAGE_TAG
+          # export IMAGE_TAG=back-image:$(date +%s)
+          # docker build . --file dockerfile-back --tag $IMAGE_TAG
+          docker build -t trading-back -f Back/trading_back_v2/dockerfile-back .
           
           # Sauvegarder le tag pour une utilisation ultérieure
-          echo "$IMAGE_TAG" > back_image_tag.txt
+          # echo "$IMAGE_TAG" > back_image_tag.txt
 
      # 2. Copier les fichiers necessaires vers la VM distante
       - name: Copy files to VM
@@ -45,7 +46,8 @@ jobs:
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: 
             docker-compose.yml
-            Back/trading_back_v2/back_image_tag.txt
+            Back/trading_back_v2/dockerfile-back
+            # Back/trading_back_v2/back_image_tag.txt
           target: "~/trading_app"
           strip_components: 0
           rm: false
