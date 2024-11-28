@@ -35,7 +35,7 @@ RUN touch /var/log/cron-hourly.log
 RUN touch /var/log/cron-daily.log
 
 # Script d'entrée pour démarrer cron et suivre les logs
-COPY Back/scheduler-entrypoint.sh .
-RUN chmod +x scheduler-entrypoint.sh
+COPY Back/trading_back_v2/scheduler-back-entrypoint.sh .
+RUN chmod +x scheduler-back-entrypoint.sh
 
 CMD ["./scheduler-back-entrypoint.sh"]
