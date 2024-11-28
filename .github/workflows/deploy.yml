@@ -13,11 +13,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Extraire le code dans un envrironnement docker dans github action
+      # 1. Extraire le code dans un environnement docker dans github action
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Construire l'image Docker pour le back
+      - name: Build Docker Image Back
+        working-directory: Back/trading_back_v2
+        run: |
+          # Générer un tag unique avec timestamp
+          export IMAGE_TAG=back-image:$(date +%s)
+          docker build . --file dockerfile-back --tag $IMAGE_TAG
+          
+          # Sauvegarder le tag pour une utilisation ultérieure
+          echo "$IMAGE_TAG" > back_image_tag.txt
 
       # Afficher la structure des fichiers pour validation
       - name: Display repository structure
@@ -25,22 +36,16 @@ jobs:
           pwd
           ls -R
 
-     # 2. Copier les fichiers necessaire comme docker-compose.yml vers la VM distante
+     # 2. Copier les fichiers necessaires vers la VM distante
       - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source: |
+          source: 
             - docker-compose.yml
-            - Back/trading_back_v2/dockerfile-back
-            - Back/trading_back_v2/scheduler-back-entrypoint.sh
-            - Back/trading_back_v2/manage.py
-            - Back/trading_back_v2/requirements.txt
-            - API_trading/manage.py
-            - API_trading/requirements.txt
-          
+            - Back/trading_back_v2/back_image_tag.txt
           target: "~/trading_app"
           strip_components: 0
           rm: false
@@ -83,6 +88,9 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
+            # Lire le tag de l'image
+            export BACK_IMAGE_TAG=$(cat ~/trading_app/back_image_tag.txt)
+            
             # Charger les variables d'environnement
             export $(grep -v '^#' ~/trading_app/.env | xargs)
 
@@ -91,8 +99,7 @@ jobs:
             docker-compose down --rmi all --volumes --remove-orphans
 
             # Reconstruire et démarrer les services
-            docker-compose up --build -d
+            BACK_IMAGE=$BACK_IMAGE_TAG docker-compose up --build -d
 
-             # Vérifier le statut des conteneurs
-             docker ps -a
-
+            # Vérifier le statut des conteneurs
+            docker ps -a

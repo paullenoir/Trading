@@ -61,9 +61,10 @@ services:
 
   # Service pour le backend Django
   back:
+    image: ${BACK_IMAGE:-back-image:latest}
     build:
-      context: .
-      dockerfile: Back/trading_back_v2/dockerfile-back.scheduler  # Chemin vers le Dockerfile
+      context: ./Back/trading_back_v2
+      dockerfile: dockerfile-back  # Chemin vers le Dockerfile
     restart: always
     volumes:
       - ./Back/trading_back_v2:/app/Back  # Synchronisation du répertoire local
