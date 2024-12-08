@@ -1,5 +1,4 @@
 from trading_back_app_v2.models import *
-from trading_back_app_v2.utils import alogorythm_smma
 import pandas_ta as ta #pip install pandas_ta
 import pandas as pd
 
@@ -53,10 +52,23 @@ def calculate_sma(df, market, interval):
         
         IndicatorSMA.save_sma(ema)
 
+def alogorythm_ema(df, column_name, period):
+    # Ensure the column is in float format
+    df[column_name] = df[column_name].astype(float)
+
+    # Calculate SMMA
+    smma = df[column_name].rolling(window=period, min_periods=1).mean()
+    
+    for i in range(period, len(df)):
+        smma.iloc[i] = (smma.iloc[i-1] * (period - 1) + df[column_name].iloc[i]) / period
+    
+    return smma
+
 def calculate_ema(df, market, interval):
-    df['SMMA20'] = alogorythm_smma(df, 'close_price', 20)
-    df['SMMA50'] = alogorythm_smma(df, 'close_price', 50)
-    df['SMMA200'] = alogorythm_smma(df, 'close_price', 200)
+    df['EMA20'] = alogorythm_ema(df, 'close_price', 20)
+    df['EMA50'] = alogorythm_ema(df, 'close_price', 50)
+    df['EMA200'] = alogorythm_ema(df, 'close_price', 200)
+
     for index, row in df.iterrows():
         row = df.loc[index]
         smma = {
@@ -64,9 +76,9 @@ def calculate_ema(df, market, interval):
             "interval_time" : interval,
             "date" :  pd.Timestamp(row['date']).strftime('%Y-%m-%d %H:%M:%S'),
             "close_price" : row['close_price'],
-            "SMMA20": row['SMMA20'],
-            "SMMA50": row['SMMA50'],
-            "SMMA200": row['SMMA200']
+            "EMA20": row['EMA20'],
+            "EMA50": row['EMA50'],
+            "EMA200": row['EMA200']
         }
 
         IndicatorEMA.save_ema(smma)
@@ -176,3 +188,4 @@ def calculate_stochastic(df, market, interval):
         }
 
         IndicatorStochastic.save_stochastic(stoch_data)
+

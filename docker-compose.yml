@@ -1,9 +1,6 @@
 # docker-compose up -d
 # docker-compose down    
 # docker-compose down -v   supprime les donnees
-
-version: '3.9'
-
 services:
   # Premier service nommé 'db' pour la base de données
   db:
@@ -21,7 +18,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       # Port uniquement accessible depuis la VM
-      - "127.0.0.1:5432:5432"
+      # - "127.0.0.1:5432:5432"
+      # local
+      - "5432:5432"
     networks:
       - app_network
     # Vérifie régulièrement si la base de données est opérationnelle
@@ -51,36 +50,71 @@ services:
           memory: 500M
           cpus: '0.5'
 
-    # # Accéder à Adminer
-    #   1. Ouvrir http://<IP_PUBLIQUE_VM>:8080 dans votre navigateur
-    #   # Se connecter avec vos identifiants PostgreSQL
-    #   Système : PostgreSQL
-    #   Serveur : db
-    #   Utilisateur : postgres
-    #   Base de données : postgres
+    # Accéder à Adminer
+    # 1. Ouvrir http://<IP_PUBLIQUE_VM>:8080 dans votre navigateur
+    # # Se connecter avec vos identifiants PostgreSQL
+    # Système : PostgreSQL
+    # Serveur : db
+    # Utilisateur : postgres
+    # Base de données : postgres
 
   # Service pour le backend Django
+  # docker logs trading-back-1     
   back:
-    image: ${BACK_IMAGE:-back-image:latest}
-    build:
-      context: ./Back/trading_back_v2
-      dockerfile: dockerfile-back  # Chemin vers le Dockerfile
+    image: trading-back:latest
     restart: always
-    volumes:
-      - ./Back/trading_back_v2:/app/Back  # Synchronisation du répertoire local
-    environment:
-      DJANGO_SETTINGS_MODULE: trading_back_v2.settings  # Remplacez par votre fichier de settings
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST: db  # Adresse de la base de données
+    # environment:
+    #   POSTGRES_DB: ${POSTGRES_DB}
+    #   POSTGRES_USER: ${POSTGRES_USER}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    #   POSTGRES_HOST: db  # Adresse de la base de données
     ports:
       - "8000:8000"
     networks:
       - app_network
+    command: >
+      sh -c "
+        python manage.py makemigrations trading_back_app_v2 &&
+        python manage.py migrate &&
+        python manage.py populate_markets && 
+        python manage.py run_back '1d'
+      "
     depends_on:
       - db
-    command: ./scheduler-back-entrypoint.sh  # Script d'entrée
+
+  # Service pour le backend Django
+  api:
+    image: trading-api:latest
+    restart: always
+    # environment:
+    #   POSTGRES_DB: ${POSTGRES_DB}
+    #   POSTGRES_USER: ${POSTGRES_USER}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    #   POSTGRES_HOST: db  # Adresse de la base de données
+    ports:
+      - "8001:8001"
+    environment:
+      - DEBUG=True
+    networks:
+      - app_network
+    command: >
+      sh -c "
+        python manage.py runserver 0.0.0.0:8001
+      "
+    depends_on:
+      - db
+      - back
+
+  front:
+    image: trading-front:latest
+    restart: always
+    ports:
+      - "80:80"  # Exposition du port 80 pour servir l'application web
+    networks:
+      - app_network
+    depends_on:
+      - back  # S'assure que le backend est démarré avant le frontend
+      - api   # S'assure que l'API est démarrée avant le frontend
 
 networks:
   app_network:

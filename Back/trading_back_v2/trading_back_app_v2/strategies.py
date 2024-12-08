@@ -1,9 +1,7 @@
 from trading_back_app_v2.models import *
 import pandas as pd
-from trading_back_app_v2.utils import determine_trend, all_increase
 import numpy as np
 import time
-import ast
 from trading_back_app_v2.backtest import apply_backtest_for_get_params
 
 class StrategyBase:
@@ -244,40 +242,40 @@ def execute_trading(market, interval):
     #Without Backtest
     start_time2 = time.time()
     strategy_tendance = StrategyTendance(market, interval, df)
-    print("    3.StrategyTendance  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyTendance  " + str((time.time() - start_time2) / 60))
 
     start_time2 = time.time()
     strategy_macd = StrategyMACD(market, interval, df)
-    print("    3.StrategyMACD  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyMACD  " + str((time.time() - start_time2) / 60))
 
     start_time2 = time.time()
     strategy_ichimoku = StrategyIchimoku(market, interval, df)
-    print("    3.StrategyIchimoku  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyIchimoku  " + str((time.time() - start_time2) / 60))
 
     #With Backtest
     start_time2 = time.time()
     strategy_2sma = Strategy2SMA(market, interval, df)
     apply_backtest_for_get_params(df, strategy_2sma, market, interval)
-    print("    3.Strategy2SMA  " + str((time.time() - start_time2) / 60))
+    print("    2.Strategy2SMA  " + str((time.time() - start_time2) / 60))
 
     start_time2 = time.time()
     strategy_bb = StrategyBollingerBand(market, interval, df)
     apply_backtest_for_get_params(df, strategy_bb, market, interval)
-    print("    3.StrategyBollingerBand  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyBollingerBand  " + str((time.time() - start_time2) / 60))
 
     start_time2 = time.time()
     strategy_rsi = StrategyRSI(market, interval, df)
     apply_backtest_for_get_params(df, strategy_rsi, market, interval)
-    print("    3.StrategyRSI  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyRSI  " + str((time.time() - start_time2) / 60))
 
     start_time2 = time.time()
     strategy_stochastic = StrategyStochastique(market, interval, df)
     apply_backtest_for_get_params(df, strategy_stochastic, market, interval)
-    print("    3.StrategyStochastic  " + str((time.time() - start_time2) / 60))
+    print("    2.StrategyStochastic  " + str((time.time() - start_time2) / 60))
 
     strategies = [strategy_tendance, strategy_macd, strategy_ichimoku, strategy_2sma, strategy_bb, strategy_rsi, strategy_stochastic]
     # strategies = [strategy_rsi]
-    print("    3.create_strategies  " + str((time.time() - start_time) / 60))
+    print("    2.create_strategies  " + str((time.time() - start_time) / 60))
 
     marketstrategyresult = {
         "name": market,
@@ -317,3 +315,18 @@ def execute_trading(market, interval):
                 
     print(marketstrategyresult)
     MarketStrategyResult.save_market_strategy_result(marketstrategyresult)
+
+def determine_trend(slope):
+    if slope > 0:
+        return "increase"
+    elif slope < 0:
+        return "decrease"
+    else:
+        return "stable"
+    
+def all_increase(row):
+    return str((
+        row['tendance_EMA20'] == "increase" and 
+        row['tendance_EMA50'] == "increase" and 
+        row['tendance_EMA200'] == "increase"
+    ))

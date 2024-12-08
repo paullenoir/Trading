@@ -1,5 +1,6 @@
-Django==5.1.1
-numpy==2.1.3
-pandas==1.5.0
-pandas_ta==0.3.14b0
-yfinance==0.1.74
+Django
+pandas>=1.3.0,<2.0.0
+numpy>=1.21.0,<2.0.0
+pandas_ta>=0.3.14b0
+yfinance
+psycopg2

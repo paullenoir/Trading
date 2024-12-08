@@ -5,6 +5,9 @@ import sys
 
 # python manage.py run_back "1d"
 # python manage.py run_back "1h"
+# python manage.py run_back "30min"
+# python manage.py run_back "15min"
+#la commande run_back se trouve dans Trading\Back\trading_back_v2\trading_back_app_v2\management\commands\run_back.py
 
 def main():
     """Run administrative tasks."""
