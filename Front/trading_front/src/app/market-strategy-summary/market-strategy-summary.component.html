@@ -12,7 +12,11 @@
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let trade of historiqueTrade" [ngClass]="{ 'positive-profit': !(trade.dollars_profit.startsWith('-')), 'negative-profit': trade.dollars_profit.startsWith('-') }">
+    <tr *ngFor="let trade of historiqueTrade"   [ngClass]="{
+      'positive-profit': trade.dollars_profit !== '0' && !trade.dollars_profit.startsWith('-'),
+      'negative-profit': trade.dollars_profit.startsWith('-'),
+      'ongoing-trade': !trade.sell_price
+    }">
       <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_start | date: 'yyyy-MM-dd') : (trade.date_start | date: 'yyyy-MM-dd HH:mm') }}</td>
       <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_end | date: 'yyyy-MM-dd') : (trade.date_end | date: 'yyyy-MM-dd HH:mm') }}</td>
       <td>{{ trade.strategyParameter }}</td>

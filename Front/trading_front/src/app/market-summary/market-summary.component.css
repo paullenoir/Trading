@@ -1,66 +1,65 @@
 .markets-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px; /* Espace entre chaque div */
 }
 
-.market-summary {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #c3e6cb;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  text-align: center;
-  width:300px;
-}
-  
-.market-summary h2 {
-  margin: 0;
-  font-size: 1.5em;
+.market-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.market-info {
-  margin: 20px 0;
-  font-size: 1.2em;
-  line-height: 1.5;
+.market-table th,
+.market-table td {
+  padding: 10px;
+  border: 1px solid #c3e6cb;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, border 0.3s ease;
+}
+
+.market-table th {
   background-color: #e2f0cb;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #c3e6cb;
-}
-
-.strategies {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-top: 15px;
-}
-
-.strategy {
-  border: 1px solid #a9dfbf;
-  border-radius: 8px;
-  padding: 10px;
-  width: 30%;
-  font-size: 1em;
-  text-align: center;
   font-weight: bold;
 }
 
-.strategy:hover {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
+.market-table td {
+  background-color: #f1f1f1;
 }
 
-/* Example color classes for dynamic styling */
+.market-table td:hover {
+  background-color: #e6e6e6;
+  transform: scale(1.05);
+}
+
+.red:hover {
+  border: 2px solid #000 !important;
+}
+
+.green:hover {
+  border: 2px solid #000 !important;
+}
+
+.yellow:hover {
+  border: 2px solid #000 !important;
+}
+
 .red {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
+  background-color: #f8d7da !important;
+  border: 1px solid #f15e5e !important;
+  color: #721c24 !important;
 }
 
 .green {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
+  background-color: #d4edda !important;
+  border: 1px solid #3d9970 !important;
+  color: #155724 !important;
+}
+
+.yellow {
+  background-color: #fff3cd !important;
+  border: 1px solid #ffc107 !important;
+  color: #856404 !important;
 }
 
 .interval-buttons {

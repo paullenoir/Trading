@@ -11,7 +11,7 @@ import { MarketSummary } from './market-summary_interface';
   styleUrl: './market-summary.component.css',
   imports: [CommonModule ]
 })
-export class MarketSummaryComponent{
+export class MarketSummaryComponent implements OnInit{
 
   marketSummaries: MarketSummary[] | null = null;
   intervalTimes: string[] | null = null;
@@ -69,9 +69,19 @@ export class MarketSummaryComponent{
       marketSummary.strategy_stochastic_color
     ];
 
+    const yellowWeight = 2;
+
     const redCount = colors.filter(color => color === 'red').length;
     const greenCount = colors.filter(color => color === 'green').length;
+    const yellowCount = colors.filter(color => color === 'yellow').length * yellowWeight;
 
-    return redCount > greenCount ? 'red' : 'green';
+    // Déterminer la couleur dominante
+    if (redCount > greenCount && redCount > yellowCount) {
+      return 'red';
+    } else if (greenCount > redCount && greenCount > yellowCount) {
+      return 'green';
+    } else {
+      return 'yellow';
+    }
   }
 }

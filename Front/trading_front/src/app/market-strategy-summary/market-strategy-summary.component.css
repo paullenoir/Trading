@@ -33,3 +33,8 @@ table {
     background-color: red;
     color: white;
   }
+  
+  .ongoing-trade {
+    background-color: yellow;
+    color: black;
+  }

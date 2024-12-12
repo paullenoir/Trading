@@ -5,45 +5,44 @@
 </div>
 
 <div class="markets-container">
-  <div class="market-summary" *ngFor="let marketSummary of getFilteredSummaries()">
-    <h2>Market: {{ marketSummary.name }}</h2>
-    <h2>Time: {{ marketSummary.interval_time }}</h2>
-    
-    <div class="market-info" [ngStyle]="{ 'background-color': getBackgroundColor(marketSummary) }">
-      <div>InTrade: {{ marketSummary.inTrading }}</div>
-      <div>BuyPrice: {{ marketSummary.buyPrice }}</div>
-      <div>intervalTime: {{ marketSummary.interval_time }}</div>
-    </div>
-  
-    <div class="strategies">
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_tendance_color === 'red', 'green': marketSummary.strategy_tendance_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'tendance')">
-        Tendance: {{marketSummary.strategy_tendance_color}}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_macd_color === 'red', 'green': marketSummary.strategy_macd_color=== 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'macd')">
-        MACD: {{ marketSummary.strategy_macd_color}}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_ichimoku_color === 'red', 'green': marketSummary.strategy_ichimoku_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'ichimoku')">
-        Ichimoku: {{ marketSummary.strategy_ichimoku_color }}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_2sma_color === 'red', 'green': marketSummary.strategy_2sma_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, '2MM')">
-        SMA 2: {{ marketSummary.strategy_2sma_color }}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_bb_color === 'red', 'green': marketSummary.strategy_bb_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'bollingerband')">
-        Bollinger Band: {{ marketSummary.strategy_bb_color }}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_rsi_color === 'red', 'green': marketSummary.strategy_rsi_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'rsi')">
-        RSI: {{ marketSummary.strategy_rsi_color }}
-      </div>
-
-      <div class="strategy" [ngClass]="{'red': marketSummary.strategy_stochastic_color === 'red', 'green': marketSummary.strategy_stochastic_color === 'green'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'stochastic')">
-        Stochastic: {{ marketSummary.strategy_stochastic_color }}
-      </div>
-      
-    </div>
-  </div>  
+  <table class="market-table">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th>Tendance</th>
+        <th>MACD</th>
+        <th>Ichimoku</th>
+        <th>SMA 2</th>
+        <th>Bollinger Band</th>
+        <th>RSI</th>
+        <th>Stochastic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let marketSummary of getFilteredSummaries()">
+        <td  [ngStyle]="{ 'background-color': getBackgroundColor(marketSummary) }">{{ marketSummary.name }}</td>
+        <td [ngClass]="{'red': marketSummary.strategy_tendance_color === 'red', 'green': marketSummary.strategy_tendance_color === 'green', 'yellow': marketSummary.strategy_tendance_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'tendance')">
+          <span class="strategy-link">View Tendance</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_macd_color === 'red', 'green': marketSummary.strategy_macd_color === 'green', 'yellow': marketSummary.strategy_macd_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'macd')">
+          <span class="strategy-link">View MACD</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_ichimoku_color === 'red', 'green': marketSummary.strategy_ichimoku_color === 'green', 'yellow': marketSummary.strategy_ichimoku_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'ichimoku')">
+          <span class="strategy-link">View Ichimoku</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_2sma_color === 'red', 'green': marketSummary.strategy_2sma_color === 'green', 'yellow': marketSummary.strategy_2sma_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, '2sma')">
+          <span class="strategy-link">View SMA 2</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_bb_color === 'red', 'green': marketSummary.strategy_bb_color === 'green', 'yellow': marketSummary.strategy_bb_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'bollingerband')">
+          <span class="strategy-link">View Bollinger Band</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_rsi_color === 'red', 'green': marketSummary.strategy_rsi_color === 'green', 'yellow': marketSummary.strategy_rsi_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'rsi')">
+          <span class="strategy-link">View RSI</span>
+        </td>
+        <td [ngClass]="{'red': marketSummary.strategy_stochastic_color === 'red', 'green': marketSummary.strategy_stochastic_color === 'green', 'yellow': marketSummary.strategy_stochastic_color === 'yellow'}" (click)="navigateToStrategyPage(marketSummary.name, marketSummary.interval_time, 'stochastic')">
+          <span class="strategy-link">View Stochastic</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>

@@ -19,9 +19,8 @@ import { IndicatorBollingerBand } from './market-strategy-summary/indocator_boll
 })
 export class ApiService {
 
-  // private domain = "http://127.0.0.1:8000/api/"   //DEV
-  private domain = "/api/"   //Prod-docker
-  // private domain = "http://localhost:8001/api/"   //Prod-Test
+  // private domain = "http://127.0.0.1:8000/api/"
+  private domain = "http://localhost:8001/api/"
 
   constructor(private http: HttpClient) { }
 
