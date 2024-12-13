@@ -87,6 +87,25 @@ jobs:
           file trading-api.tar
           file trading-front.tar
 
+      - name: Verify files before transfer
+        run: |
+          pwd
+          ls -l trading-back.tar trading-api.tar trading-front.tar docker-compose.yml
+
+      - name: Debug file transfer
+        run: |
+          echo "Contenu du répertoire :"
+          pwd
+          ls -lh
+          
+          echo "Vérification des fichiers à transférer :"
+          test -f trading-back.tar && echo "trading-back.tar existe" || echo "trading-back.tar MANQUANT"
+          test -f trading-api.tar && echo "trading-api.tar existe" || echo "trading-api.tar MANQUANT"
+          test -f trading-front.tar && echo "trading-front.tar existe" || echo "trading-front.tar MANQUANT"
+          test -f docker-compose.yml && echo "docker-compose.yml existe" || echo "docker-compose.yml MANQUANT"
+          
+          echo "Tailles des fichiers :"
+          du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
 
       # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
       - name: Transfer Docker images to VM
