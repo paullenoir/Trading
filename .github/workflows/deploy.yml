@@ -33,9 +33,9 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            # Vérifier si Docker est installé, sinon l'installer
+            docker --version || sudo apt-get install -y docker.io
+            docker-compose --version || sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
             docker --version
             docker-compose --version
@@ -56,18 +56,26 @@ jobs:
         run: |
           docker build -t trading-front dockerfile .
 
-        # Transférer les images Docker
-      - name: Transfer Docker images
-        uses: appleboy/ssh-action@v0.1.8
+      # Sauvegarder les images Docker en fichiers .tar
+      - name: Save Docker images
+        run: |
+          docker save -o trading-back.tar trading-back
+          docker save -o trading-api.tar trading-api
+          docker save -o trading-front.tar trading-front
+
+      # Transférer les images Docker vers la VM distante
+      - name: Transfer Docker images to VM
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          script: |
-            # Sauvegarder les images Docker sur la VM
-            docker save -o ~/trading_app/trading-back.tar trading-back
-            docker save -o ~/trading_app/trading-api.tar trading-api
-            docker save -o ~/trading_app/trading-front.tar trading-front
+          source:
+            trading-back.tar
+            trading-api.tar
+            trading-front.tar
+          target: "~/trading_app"
+          strip_components: 0
 
       # 2. Copier les fichiers et images vers la VM
       - name: Copy files and Docker images to VM
