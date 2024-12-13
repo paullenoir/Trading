@@ -88,17 +88,16 @@ jobs:
           du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
 
       # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
+      - uses: actions/checkout@v4
       - name: Transfer Docker images to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          port: 22
           source: 
-            /home/runner/work/Trading/Trading/trading-back.tar
-            /home/runner/work/Trading/Trading/trading-api.tar
-            /home/runner/work/Trading/Trading/trading-front.tar
-            /home/runner/work/Trading/Trading/docker-compose.yml
+            "/home/runner/work/Trading/Trading/trading-back.tar,/home/runner/work/Trading/Trading/trading-api.tar,/home/runner/work/Trading/Trading/trading-front.tar,/home/runner/work/Trading/Trading/docker-compose.yml"
           target: "/mnt/data"
           strip_components: 0
 
