@@ -90,14 +90,18 @@ jobs:
 
       # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
       - name: Transfer Docker images to VM
-        run: |
-          scp -i ${{ secrets.ORACLE_VM_SSH_KEY }} \
-              -o StrictHostKeyChecking=no \
-              trading-back.tar \
-              trading-api.tar \
-              trading-front.tar \
-              docker-compose.yml \
-              ${{ secrets.ORACLE_VM_USER }}@${{ secrets.ORACLE_VM_IP }}:/mnt/data/
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          source: 
+            trading-back.tar
+            trading-api.tar
+            trading-front.tar
+            docker-compose.yml
+          target: "/mnt/data"
+          strip_components: 0
 
       # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
       - name: Deploy on VM
