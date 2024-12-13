@@ -72,26 +72,6 @@ jobs:
           docker save -o trading-api.tar trading-api
           docker save -o trading-front.tar trading-front
 
-          # Commandes de vérification
-          echo "Contenu du répertoire courant :"
-          pwd
-          ls -lh
-          
-          echo "Vérification de la taille et de l'existence des fichiers .tar :"
-          du -h trading-back.tar
-          du -h trading-api.tar
-          du -h trading-front.tar
-          
-          echo "Obtenir plus de détails sur les fichiers .tar :"
-          file trading-back.tar
-          file trading-api.tar
-          file trading-front.tar
-
-      - name: Verify files before transfer
-        run: |
-          pwd
-          ls -l trading-back.tar trading-api.tar trading-front.tar docker-compose.yml
-
       - name: Debug file transfer
         run: |
           echo "Contenu du répertoire :"
@@ -115,10 +95,10 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source: 
-            trading-back.tar
-            trading-api.tar
-            trading-front.tar
-            docker-compose.yml
+            /home/runner/work/Trading/Trading/trading-back.tar
+            /home/runner/work/Trading/Trading/trading-api.tar
+            /home/runner/work/Trading/Trading/trading-front.tar
+            /home/runner/work/Trading/Trading/docker-compose.yml
           target: "/mnt/data"
           strip_components: 0
 
