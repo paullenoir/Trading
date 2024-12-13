@@ -111,7 +111,7 @@ jobs:
             docker-compose up -d --build
 
             # Nettoyer les images et conteneurs inutiles
-            docker system prune -af
+            docker system prune -af 
         
 
       # # Construire l'image Docker pour le back
