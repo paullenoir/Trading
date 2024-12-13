@@ -72,19 +72,21 @@ jobs:
           docker save -o trading-api.tar trading-api
           docker save -o trading-front.tar trading-front
 
-      # # Transférer les images Docker vers la VM distante (volume /mnt/data)
-      # - name: Transfer Docker images to VM
-      #   uses: appleboy/scp-action@v0.1.7
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     source:
-      #       trading-back.tar
-      #       trading-api.tar
-      #       trading-front.tar
-      #     target: "/mnt/data"
-      #     strip_components: 0
+          # Commandes de vérification
+          echo "Contenu du répertoire courant :"
+          pwd
+          ls -lh
+          
+          echo "Vérification de la taille et de l'existence des fichiers .tar :"
+          du -h trading-back.tar
+          du -h trading-api.tar
+          du -h trading-front.tar
+          
+          echo "Obtenir plus de détails sur les fichiers .tar :"
+          file trading-back.tar
+          file trading-api.tar
+          file trading-front.tar
+
 
       # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
       - name: Transfer Docker images to VM
