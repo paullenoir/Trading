@@ -13,7 +13,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Extraire le code dans un environnement docker dans github action
+      # 1. Extraire le code dans un environnement GitHub Action
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -25,22 +25,31 @@ jobs:
           pwd
           ls -R
 
-      # Installer Docker Compose sur la VM distante
-      - name: Install Docker and Docker Compose
+      # Installer Docker et Docker Compose sur la VM distante (volume spécifique /dev/sdal)
+      - name: Install Docker and Docker Compose on /dev/sdal
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
+            # Monter le volume à /mnt/data (par exemple, monter le volume /dev/sdal)
+            sudo mkdir -p /mnt/data
+            sudo mount /dev/sdal /mnt/data
+
+            # Changer le répertoire de travail pour /mnt/data
+            cd /mnt/data
+
             # Vérifier si Docker est installé, sinon l'installer
             docker --version || sudo apt-get install -y docker.io
             docker-compose --version || sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
+
+            # Vérifier les installations
             docker --version
             docker-compose --version
 
-      # Build des images Docker
+      # Build des images Docker localement
       - name: Build Backend Image
         working-directory: Back/trading_back_v2
         run: |
@@ -49,12 +58,12 @@ jobs:
       - name: Build API Image
         working-directory: API_trading
         run: |
-          docker build -t trading-api dockerfile .
+          docker build -t trading-api -f dockerfile .
 
       - name: Build Frontend Image
         working-directory: Front/trading_front
         run: |
-          docker build -t trading-front dockerfile .
+          docker build -t trading-front -f dockerfile .
 
       # Sauvegarder les images Docker en fichiers .tar
       - name: Save Docker images
@@ -63,7 +72,7 @@ jobs:
           docker save -o trading-api.tar trading-api
           docker save -o trading-front.tar trading-front
 
-      # Transférer les images Docker vers la VM distante
+      # Transférer les images Docker vers la VM distante (volume /mnt/data)
       - name: Transfer Docker images to VM
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -71,25 +80,25 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           source:
-            trading-back.tar
-            trading-api.tar
-            trading-front.tar
-          target: "~/trading_app"
+            - trading-back.tar
+            - trading-api.tar
+            - trading-front.tar
+          target: "/mnt/data"
           strip_components: 0
 
-      # 2. Copier les fichiers et images vers la VM
-      - name: Copy files and Docker images to VM
+      # Transférer le fichier docker-compose.yml vers la VM distante (volume /mnt/data)
+      - name: Copy docker-compose.yml to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_VM_IP }}
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source: 
-            docker-compose.yml
-          target: "~/trading_app"
+          source:
+            - docker-compose.yml
+          target: "/mnt/data"
           strip_components: 0
 
-      #Charger et déployer sur la VM
+      # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
       - name: Deploy on VM
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -97,101 +106,18 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            cd ~/trading_app
+            cd /mnt/data
 
             # Charger les images Docker
             docker load -i trading-back.tar
             docker load -i trading-api.tar
             docker load -i trading-front.tar
 
-            # Arrêter et supprimer les conteneurs existants
+            # Arrêter et supprimer les conteneurs existants, ainsi que les images
             docker-compose down --rmi all
 
             # Redémarrer les services
-            docker-compose up -d --build
+            docker-compose up -d
 
             # Nettoyer les images et conteneurs inutiles
-            docker system prune -af 
-        
-
-      # # Construire l'image Docker pour le back
-      # - name: Build Docker Image Back
-      #   working-directory: Back/trading_back_v2
-      #   run: |
-      #     # Générer un tag unique avec timestamp
-      #     # export IMAGE_TAG=back-image:$(date +%s)
-      #     # docker build . --file dockerfile-back --tag $IMAGE_TAG
-      #     docker build -t trading-back -f dockerfile-back .
-          
-      #     # Sauvegarder le tag pour une utilisation ultérieure
-      #     # echo "$IMAGE_TAG" > back_image_tag.txt
-
-    #  # 2. Copier les fichiers necessaires vers la VM distante
-    #   - name: Copy files to VM
-    #     uses: appleboy/scp-action@v0.1.7
-    #     with:
-    #       host: ${{ secrets.ORACLE_VM_IP }}
-    #       username: ${{ secrets.ORACLE_VM_USER }}
-    #       key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-    #       source: 
-    #         docker-compose.yml
-    #         Back/trading_back_v2/dockerfile-back
-    #         # Back/trading_back_v2/back_image_tag.txt
-    #       target: "~/trading_app"
-    #       strip_components: 0
-    #       rm: false
-    #       debug: true
-
-      # # Vérifier les fichiers transférés sur la VM
-      # - name: Verify transferred files
-      #   uses: appleboy/ssh-action@v0.1.8
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     script: |
-      #       ls -la ~/trading_app
-      #       echo "Contenu du dossier Back :"
-      #       ls -la ~/trading_app/Back/trading_back_v2
-      #       echo "Contenu du dossier API :"
-      #       ls -la ~/trading_app/API_trading
-
-
-      # # 3. Installer Docker Compose sur la VM distante
-      # - name: Install Docker and Docker Compose
-      #   uses: appleboy/ssh-action@v0.1.8
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     script: |
-      #       sudo apt-get update
-      #       sudo apt-get install -y docker.io
-      #       sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-      #       sudo chmod +x /usr/local/bin/docker-compose
-      #       docker --version
-      #       docker-compose --version
-
-      # # 4. Charger les variables d'environnement, gérer les conteneurs et déployer
-      # - name: Manage containers and deploy services
-      #   uses: appleboy/ssh-action@v0.1.8
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     script: |
-      #       # Lire le tag de l'image
-      #       export BACK_IMAGE_TAG=$(cat ~/trading_app/back_image_tag.txt)
-            
-      #       # Charger les variables d'environnement
-      #       export $(grep -v '^#' ~/trading_app/.env | xargs)
-
-      #       # Arrêter et supprimer les conteneurs et leurs images (sans supprimer le volume de la BD)
-      #       cd ~/trading_app
-      #       docker-compose down --rmi all --volumes --remove-orphans
-
-      #       # Reconstruire et démarrer les services
-      #       BACK_IMAGE=$BACK_IMAGE_TAG docker-compose up --build -d
-
-      #       # Vérifier le statut des conteneurs
-      #       docker ps -a
+            docker system prune -af
