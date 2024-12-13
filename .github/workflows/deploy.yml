@@ -72,31 +72,30 @@ jobs:
           docker save -o trading-api.tar trading-api
           docker save -o trading-front.tar trading-front
 
-      # Transférer les images Docker vers la VM distante (volume /mnt/data)
-      - name: Transfer Docker images to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source:
-            trading-back.tar
-            trading-api.tar
-            trading-front.tar
-          target: "/mnt/data"
-          strip_components: 0
+      # # Transférer les images Docker vers la VM distante (volume /mnt/data)
+      # - name: Transfer Docker images to VM
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.ORACLE_VM_IP }}
+      #     username: ${{ secrets.ORACLE_VM_USER }}
+      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+      #     source:
+      #       trading-back.tar
+      #       trading-api.tar
+      #       trading-front.tar
+      #     target: "/mnt/data"
+      #     strip_components: 0
 
-      # Transférer le fichier docker-compose.yml vers la VM distante (volume /mnt/data)
-      - name: Copy docker-compose.yml to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          source:
-            docker-compose.yml
-          target: "/mnt/data"
-          strip_components: 0
+      # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
+      - name: Transfer Docker images to VM
+        run: |
+          scp -i ${{ secrets.ORACLE_VM_SSH_KEY }} \
+              -o StrictHostKeyChecking=no \
+              trading-back.tar \
+              trading-api.tar \
+              trading-front.tar \
+              docker-compose.yml \
+              ${{ secrets.ORACLE_VM_USER }}@${{ secrets.ORACLE_VM_IP }}:/mnt/data/
 
       # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
       - name: Deploy on VM
