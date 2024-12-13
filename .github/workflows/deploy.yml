@@ -53,17 +53,17 @@ jobs:
       - name: Build Backend Image
         working-directory: Back/trading_back_v2
         run: |
-          docker build -t trading-back -f dockerfile .
+          docker build -t trading-back -f Dockerfile .
 
       - name: Build API Image
         working-directory: API_trading
         run: |
-          docker build -t trading-api -f dockerfile .
+          docker build -t trading-api -f Dockerfile .
 
       - name: Build Frontend Image
         working-directory: Front/trading_front
         run: |
-          docker build -t trading-front -f dockerfile .
+          docker build -t trading-front -f Dockerfile .
 
       # Sauvegarder les images Docker en fichiers .tar
       - name: Save Docker images
