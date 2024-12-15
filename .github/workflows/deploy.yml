@@ -40,28 +40,56 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
-            # Monter le volume à /mnt/data (par exemple, monter le volume /dev/sdal)
-            sudo mkdir -p /mnt/data
-            sudo mount /dev/sdal /mnt/data || echo "Volume /dev/sdal déjà monté"
-
+            # Monter le volume à /mnt/data
+            if [ ! -d "/mnt/data" ]; then
+              echo "Création du répertoire /mnt/data..."
+              sudo mkdir -p /mnt/data
+            fi
+      
+            if ! mountpoint -q /mnt/data; then
+              echo "Montage du volume /dev/sdal sur /mnt/data..."
+              sudo mount /dev/sdal /mnt/data || echo "Volume /dev/sdal déjà monté ou introuvable"
+            else
+              echo "/mnt/data est déjà monté."
+            fi
+      
             # Configurer les permissions pour le répertoire cible
+            echo "Configuration des permissions pour /mnt/data..."
             sudo chown -R $USER:$USER /mnt/data
             sudo chmod -R 755 /mnt/data
             sudo rm -rf /mnt/data/*
-
-            # Vérifier si Docker est installé, sinon l'installer
-            docker --version || sudo apt-get install -y docker.io
-            docker-compose --version || sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-
+      
+            # Vérifier si Docker est installé
+            if ! command -v docker &>/dev/null; then
+              echo "Docker non installé. Installation de Docker..."
+              sudo apt-get update && sudo apt-get install -y docker.io
+            else
+              echo "Docker est déjà installé : $(docker --version)"
+            fi
+      
+            # Vérifier si Docker Compose est installé
+            if ! command -v docker-compose &>/dev/null; then
+              echo "Docker Compose non installé. Installation de Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            else
+              echo "Docker Compose est déjà installé : $(docker-compose --version)"
+            fi
+      
             # Vérifier les installations
             docker --version
             docker-compose --version
-
-            #retirer les anciens containers et images
-            sudo docker ps -a -q | xargs sudo docker rm -f
-            sudo docker images -q | xargs sudo docker rmi -f
-
+      
+            # Nettoyer les conteneurs et images Docker
+            if [ -n "$(sudo docker ps -a -q)" ]; then
+              echo "Suppression des anciens conteneurs..."
+              sudo docker ps -a -q | xargs sudo docker rm -f
+            fi
+      
+            if [ -n "$(sudo docker images -q)" ]; then
+              echo "Suppression des anciennes images..."
+              sudo docker images -q | xargs sudo docker rmi -f
+            fi
 
       # Build des images Docker localement
       - name: Build Backend Image
