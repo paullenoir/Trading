@@ -22,7 +22,7 @@ services:
       # local
       - "5432:5432"
     networks:
-      - app_network
+      - data_app_network
     # Vérifie régulièrement si la base de données est opérationnelle
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -37,7 +37,7 @@ services:
     ports:
       - 8080:8080
     networks:
-      - app_network
+      - data_app_network
     depends_on:
       - db
     environment:
@@ -71,7 +71,7 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - app_network
+      - data_app_network
     command: >
       sh -c "
         python manage.py makemigrations trading_back_app_v2 &&
@@ -96,7 +96,7 @@ services:
     environment:
       - DEBUG=True
     networks:
-      - app_network
+      - data_app_network
     command: >
       sh -c "
         python manage.py runserver 0.0.0.0:8001
@@ -111,13 +111,13 @@ services:
     ports:
       - "80:80"  # Exposition du port 80 pour servir l'application web
     networks:
-      - app_network
+      - data_app_network
     depends_on:
       - back  # S'assure que le backend est démarré avant le frontend
       - api   # S'assure que l'API est démarrée avant le frontend
 
 networks:
-  app_network:
+  data_app_network:
     driver: bridge
 
 # Définition des volumes persistants
