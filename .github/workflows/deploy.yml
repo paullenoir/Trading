@@ -25,6 +25,13 @@ jobs:
           pwd
           ls -R
 
+      # Vérification des permissions pour les fichiers et répertoires
+      - name: Check and Fix Permissions
+        run: |
+          echo "Vérification des permissions dans le répertoire de travail"
+          chmod -R u+rw .
+          ls -l
+
       # Installer Docker et Docker Compose sur la VM distante (volume spécifique /dev/sdal)
       - name: Install Docker and Docker Compose on /dev/sdal
         uses: appleboy/ssh-action@v0.1.8
@@ -87,17 +94,17 @@ jobs:
           echo "Tailles des fichiers :"
           du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
 
-      - name: Test SSH Connection
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          port: 22
-          script: |
-            echo "Connexion SSH réussie"
-            hostname
-            whoami
+      # - name: Test SSH Connection
+      #   uses: appleboy/ssh-action@v0.1.8
+      #   with:
+      #     host: ${{ secrets.ORACLE_VM_IP }}
+      #     username: ${{ secrets.ORACLE_VM_USER }}
+      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+      #     port: 22
+      #     script: |
+      #       echo "Connexion SSH réussie"
+      #       hostname
+      #       whoami
 
       # - name: Comprehensive SSH and File Transfer Debug
       #   run: |
@@ -132,11 +139,11 @@ jobs:
           username: ${{ secrets.ORACLE_VM_USER }}
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           port: 22
-          source: >
-            /home/runner/work/Trading/Trading/trading-back.tar,
-            /home/runner/work/Trading/Trading/trading-api.tar,
-            /home/runner/work/Trading/Trading/trading-front.tar,
-            /home/runner/work/Trading/Trading/docker-compose.yml
+          source: |
+            trading-back.tar,
+            trading-api.tar,
+            trading-front.tar,
+            docker-compose.yml
           target: "/mnt/data"
           strip_components: 0
           debug: true
