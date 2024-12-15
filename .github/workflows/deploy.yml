@@ -99,17 +99,17 @@ jobs:
             hostname
             whoami
 
-      - name: Comprehensive SSH and File Transfer Debug
-        run: |
-          echo "Vérification des fichiers locaux :"
-          pwd
-          ls -lh /home/runner/work/Trading/Trading/
+      # - name: Comprehensive SSH and File Transfer Debug
+      #   run: |
+      #     echo "Vérification des fichiers locaux :"
+      #     pwd
+      #     ls -lh /home/runner/work/Trading/Trading/
       
-          echo "Test de connexion SSH :"
-          ssh -v -i <(echo "${{ secrets.ORACLE_VM_SSH_KEY }}") \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.ORACLE_VM_USER }}@${{ secrets.ORACLE_VM_IP }} \
-              "echo 'Connexion SSH réussie'"
+      #     echo "Test de connexion SSH :"
+      #     ssh -v -i <(echo "${{ secrets.ORACLE_VM_SSH_KEY }}") \
+      #         -o StrictHostKeyChecking=no \
+      #         ${{ secrets.ORACLE_VM_USER }}@${{ secrets.ORACLE_VM_IP }} \
+      #         "echo 'Connexion SSH réussie'"
 
       # # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
       # - uses: actions/checkout@v4
