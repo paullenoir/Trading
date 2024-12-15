@@ -58,6 +58,11 @@ jobs:
             docker --version
             docker-compose --version
 
+            #retirer les anciens containers et images
+            sudo docker kill $(sudo docker ps -q)
+            sudo docker rm $(sudo docker ps -a -q)
+            sudo docker rmi $(sudo docker images -q)
+
       # Build des images Docker localement
       - name: Build Backend Image
         working-directory: Back/trading_back_v2
