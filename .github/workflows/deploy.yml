@@ -76,8 +76,11 @@ jobs:
       - name: Save Docker images
         run: |
           docker save -o trading-back.tar trading-back
+          chmod 644 trading-back.tar
           docker save -o trading-api.tar trading-api
+          chmod 644 trading-api.tar
           docker save -o trading-front.tar trading-front
+          chmod 644 trading-front.tar
 
       - name: Debug file transfer
         run: |
@@ -94,43 +97,17 @@ jobs:
           echo "Tailles des fichiers :"
           du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
 
-      # - name: Test SSH Connection
-      #   uses: appleboy/ssh-action@v0.1.8
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     port: 22
-      #     script: |
-      #       echo "Connexion SSH réussie"
-      #       hostname
-      #       whoami
-
-      # - name: Comprehensive SSH and File Transfer Debug
-      #   run: |
-      #     echo "Vérification des fichiers locaux :"
-      #     pwd
-      #     ls -lh /home/runner/work/Trading/Trading/
-      
-      #     echo "Test de connexion SSH :"
-      #     ssh -v -i <(echo "${{ secrets.ORACLE_VM_SSH_KEY }}") \
-      #         -o StrictHostKeyChecking=no \
-      #         ${{ secrets.ORACLE_VM_USER }}@${{ secrets.ORACLE_VM_IP }} \
-      #         "echo 'Connexion SSH réussie'"
-
-      # # Transférer les images Docker + docker-compose vers la VM distante (volume /mnt/data)
-      # - uses: actions/checkout@v4
-      # - name: Transfer Docker images to VM
-      #   uses: appleboy/scp-action@v0.1.7
-      #   with:
-      #     host: ${{ secrets.ORACLE_VM_IP }}
-      #     username: ${{ secrets.ORACLE_VM_USER }}
-      #     key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-      #     port: 22
-      #     source: 
-      #       "/home/runner/work/Trading/Trading/trading-back.tar,/home/runner/work/Trading/Trading/trading-api.tar,/home/runner/work/Trading/Trading/trading-front.tar,/home/runner/work/Trading/Trading/docker-compose.yml"
-      #     target: "/mnt/data"
-      #     strip_components: 0
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          port: 22
+          script: |
+            echo "Connexion SSH réussie"
+            hostname
+            whoami
 
       - name: Transfer Docker images to VM
         uses: appleboy/scp-action@v0.1.7
