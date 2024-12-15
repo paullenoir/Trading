@@ -42,10 +42,11 @@ jobs:
           script: |
             # Monter le volume à /mnt/data (par exemple, monter le volume /dev/sdal)
             sudo mkdir -p /mnt/data
-            sudo mount /dev/sdal /mnt/data
+            sudo mount /dev/sdal /mnt/data || echo "Volume /dev/sdal déjà monté"
 
-            # Changer le répertoire de travail pour /mnt/data
-            cd /mnt/data
+            # Configurer les permissions pour le répertoire cible
+            sudo chown -R $USER:$USER /mnt/data
+            sudo chmod -R 755 /mnt/data
 
             # Vérifier si Docker est installé, sinon l'installer
             docker --version || sudo apt-get install -y docker.io
@@ -125,6 +126,19 @@ jobs:
           strip_components: 0
           debug: true
 
+      # Fixer les permissions après transfert des fichiers
+      - name: Fix permissions on transferred files
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            cd /mnt/data
+            sudo chmod -R 644 *.tar *.yml
+            sudo chmod +x *.tar *.yml
+            ls -l
+
       # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
       - name: Deploy on VM
         uses: appleboy/ssh-action@v0.1.8
@@ -139,6 +153,10 @@ jobs:
             docker load -i trading-back.tar
             docker load -i trading-api.tar
             docker load -i trading-front.tar
+
+            # Vérifier la configuration du fichier docker-compose
+            sudo chmod 644 docker-compose.yml
+            docker-compose config
 
             # Arrêter et supprimer les conteneurs existants, ainsi que les images
             docker-compose down --rmi all
