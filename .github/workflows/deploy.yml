@@ -150,9 +150,9 @@ jobs:
             cd /mnt/data
 
             # Charger les images Docker
-            docker load -i trading-back.tar
-            docker load -i trading-api.tar
-            docker load -i trading-front.tar
+            sudo docker load -i trading-back.tar
+            sudo docker load -i trading-api.tar
+            sudo docker load -i trading-front.tar
 
             # Vérifier la configuration du fichier docker-compose
             sudo chmod 644 docker-compose.yml
