@@ -81,15 +81,15 @@ jobs:
             docker-compose --version
       
             # Nettoyer les conteneurs et images Docker
-            if [ -n "$(sudo docker ps -a -q)" ]; then
-              echo "Suppression des anciens conteneurs..."
-              sudo docker ps -a -q | xargs sudo docker rm -f
-            fi
+            # if [ -n "$(sudo docker ps -a -q)" ]; then
+            #   echo "Suppression des anciens conteneurs..."
+            #   sudo docker ps -a -q | xargs sudo docker rm -f
+            # fi
       
-            if [ -n "$(sudo docker images -q)" ]; then
-              echo "Suppression des anciennes images..."
-              sudo docker images -q | xargs sudo docker rmi -f
-            fi
+            # if [ -n "$(sudo docker images -q)" ]; then
+            #   echo "Suppression des anciennes images..."
+            #   sudo docker images -q | xargs sudo docker rmi -f
+            # fi
 
       # Build des images Docker localement
       - name: Build Backend Image
@@ -207,7 +207,7 @@ jobs:
             sudo ufw status
             sudo ufw allow 5432
             sudo ufw reload
-            
+
             # Redémarrer les services
             sudo docker-compose up -d
 
