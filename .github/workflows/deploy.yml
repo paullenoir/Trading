@@ -201,6 +201,13 @@ jobs:
             sudo docker-compose config
             sudo docker images
 
+            #Requis pour builder BD
+            sudo apt update
+            sudo apt install postgresql-client
+            sudo ufw status
+            sudo ufw allow 5432
+            sudo ufw reload
+            
             # Redémarrer les services
             sudo docker-compose up -d
 

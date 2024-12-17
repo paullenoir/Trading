@@ -41,7 +41,7 @@ services:
     depends_on:
       - db
     environment:
-      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DEFAULT_SERVER: "168.138.69.233:5432/"
       ADMINER_DESIGN: nette # Theme plus moderne
     # Limites de ressources
     deploy:
