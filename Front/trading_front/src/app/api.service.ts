@@ -21,7 +21,7 @@ export class ApiService {
 
   // private domain = "http://127.0.0.1:8000/api/"
   // private domain = "168.138.69.233:8001/api/"
-  private domain = ":8001/api/"
+  private domain = "/api/"
 
   constructor(private http: HttpClient) { }
 
