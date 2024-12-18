@@ -81,15 +81,42 @@ jobs:
             docker-compose --version
       
             # Nettoyer les conteneurs et images Docker
-            # if [ -n "$(sudo docker ps -a -q)" ]; then
-            #   echo "Suppression des anciens conteneurs..."
-            #   sudo docker ps -a -q | xargs sudo docker rm -f
-            # fi
-      
-            # if [ -n "$(sudo docker images -q)" ]; then
-            #   echo "Suppression des anciennes images..."
-            #   sudo docker images -q | xargs sudo docker rmi -f
-            # fi
+            if [ -n "$(sudo docker ps -a -q)" ]; then
+              echo "Suppression des anciens conteneurs (sauf 'db' utilisant l'image 'postgres')..."
+              # sudo docker ps -a -q | xargs sudo docker rm -f
+              sudo docker ps -a --format "{{.ID}} {{.Image}} {{.Names}}" | grep -v "postgres" | grep -v "db" | awk '{print $1}' | xargs -r sudo docker rm -f
+            fi
+
+            if [ -n "$(sudo docker images -q)" ]; then
+              echo "Suppression des anciennes images (sauf 'postgres')..."
+              # sudo docker images -q | xargs sudo docker rmi -f
+              sudo docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres" | awk '{print $1}' | xargs -r sudo docker rmi -f
+            fi
+
+            # Vérifier si le conteneur 'db' existe
+            if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
+              echo "Le conteneur 'db' n'existe pas. Création du conteneur..."
+              sudo docker run --name db \
+                -e POSTGRES_DB=postgres \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=Bonjour3030! \
+                -p 5432:5432 \
+                -v db_data:/var/lib/postgresql/data \
+                --restart always \
+                --shm-size=1g \
+                -d postgres:latest
+            else
+              echo "Le conteneur 'db' existe déjà."
+            fi
+
+            # Attente jusqu'à ce que le conteneur 'db' soit en état 'running'
+            echo "En attente que le conteneur 'db' soit en état 'running'..."
+            while [ "$(sudo docker inspect -f '{{.State.Running}}' db)" != "true" ]; do
+              echo "Le conteneur 'db' n'est pas encore prêt. Nouvelle vérification dans 2 secondes..."
+              sleep 2
+            done
+
+            echo "Le conteneur 'db' est maintenant en état 'running'."
 
       # Build des images Docker localement
       - name: Build Backend Image
@@ -172,11 +199,10 @@ jobs:
             sudo chmod -R 644 *.tar *.yml
             sudo chmod +x *.tar *.yml
             ls -l
-
-      # DANS VM avec putty
-      # sudo usermod -aG docker ubuntu
-      # ls -l /var/run/docker.sock
-      # sudo chmod 666 /var/run/docker.sock
+            # DANS VM avec putty
+            sudo usermod -aG docker ubuntu
+            ls -l /var/run/docker.sock
+            sudo chmod 666 /var/run/docker.sock
 
       # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
       - name: Deploy on VM
