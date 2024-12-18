@@ -113,6 +113,8 @@ export class MarketStrategySummaryComponent{
       this.apiservice.getIndicatorEMA(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorema = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          console.log('this.indicatorema')
+          console.log(this.indicatorema)
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
@@ -1212,7 +1214,7 @@ export class MarketStrategySummaryComponent{
               }
           };
       })
-    },
+      },
       grid: {
         row: {
           colors: ['#f3f3f3', 'transparent'], // Couleurs alternées pour chaque ligne
