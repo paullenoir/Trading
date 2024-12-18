@@ -113,36 +113,34 @@ export class MarketStrategySummaryComponent{
       this.apiservice.getIndicatorEMA(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorema = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
-          console.log('this.indicatorema')
-          console.log(this.indicatorema)
+          this.configureTendanceChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureTendanceChart();
     } 
     else if (strategy === 'macd') {
       this.apiservice.getIndicatorMACD(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorMACD = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configureMACDChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureMACDChart();
     } 
     else if (strategy === 'ichimoku') {
       this.apiservice.getIndicatorIchimoku(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorIchimoku = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configureichimokuChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureichimokuChart();
     }
     else if (strategy === '2MM') {
       let jsonString = JSON.stringify(data, (key, value) => {
@@ -155,46 +153,45 @@ export class MarketStrategySummaryComponent{
       this.apiservice.getIndicator2MM(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicator2MM = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configure2smaChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-
-      this.configure2smaChart();
     }
     else if (strategy === 'bollingerband') {
       this.apiservice.getIndicatorBollingerBand(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorBollingerBand = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configureBollingerBandsChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureBollingerBandsChart();
     }
     else if (strategy === 'rsi') {
       this.apiservice.getIndicatorRSI(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorRSI = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configureRSIChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureRSIChart();
     } 
     else if (strategy === 'stochastic') {
       this.apiservice.getIndicatorStochastic(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
         next: (data) => {
           this.indicatorStochastic = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Assignez les données reçues au tableau
+          this.configureStochasticChart();
         },
         error: (err) => {
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
-      this.configureStochasticChart();
     }
   }
 
