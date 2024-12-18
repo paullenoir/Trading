@@ -20,7 +20,8 @@ import { IndicatorBollingerBand } from './market-strategy-summary/indocator_boll
 export class ApiService {
 
   // private domain = "http://127.0.0.1:8000/api/"
-  private domain = "168.138.69.233:8001/api/"
+  // private domain = "168.138.69.233:8001/api/"
+  private domain = ":8001/api/"
 
   constructor(private http: HttpClient) { }
 
