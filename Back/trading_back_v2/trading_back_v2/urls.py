@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from  trading_back_app_v2.views import execute_run_back
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('run-back/<str:interval>/', execute_run_back, name='run_back'),
 ]
