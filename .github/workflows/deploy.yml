@@ -362,8 +362,6 @@ jobs:
             done
 
             echo "Le conteneur 'db' est maintenant en état 'running'."
-            
-            sudo rm docker-compose.yml
 
             # Arrêter et supprimer les conteneurs existants, ainsi que les images
             # A faire dans putty
