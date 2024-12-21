@@ -338,6 +338,33 @@ jobs:
           script: |
             cd /mnt/data
 
+            # Vérifier si le conteneur 'db' existe
+            if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
+              echo "Le conteneur 'db' n'existe pas. Création du conteneur..."
+              sudo docker run --name db \
+                -e POSTGRES_DB=postgres \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=Bonjour3030! \
+                -p 5432:5432 \
+                -v db_data:/var/lib/postgresql/data \
+                --restart always \
+                --shm-size=1g \
+                -d postgres:latest
+            else
+              echo "Le conteneur 'db' existe déjà."
+            fi
+
+            # Attente jusqu'à ce que le conteneur 'db' soit en état 'running'
+            echo "En attente que le conteneur 'db' soit en état 'running'..."
+            while [ "$(sudo docker inspect -f '{{.State.Running}}' db)" != "true" ]; do
+              echo "Le conteneur 'db' n'est pas encore prêt. Nouvelle vérification dans 2 secondes..."
+              sleep 2
+            done
+
+            echo "Le conteneur 'db' est maintenant en état 'running'."
+            
+            sudo rm docker-compose.yml
+
             # Arrêter et supprimer les conteneurs existants, ainsi que les images
             # A faire dans putty
             # sudo docker ps -a -q | xargs sudo docker rm -f

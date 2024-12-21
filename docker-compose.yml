@@ -4,32 +4,32 @@
 services:
   # Premier service nommé 'db' pour la base de données
   # A Faire dans la VM: docker run --name db -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=Bonjour3030! -p 5432:5432 -v db_data:/var/lib/postgresql/data --restart always --shm-size=1g -d postgres:latest
-  db:
-    image: postgres:latest
-    restart: always
-    shm_size: '1gb'  # Augmenté pour de meilleures performances
-    volumes:
-      # Volume persistant pour les données
-      - postgres_data:/var/lib/postgresql/data
-      # Volume pour les sauvegardes
-      - postgres_backups:/backups
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Bonjour3030!
-    ports:
-      # Port uniquement accessible depuis la VM
-      # - "127.0.0.1:5432:5432"
-      # local
-      - "5432:5432"
-    networks:
-      - data_app_network
-    # Vérifie régulièrement si la base de données est opérationnelle
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 60s
-      timeout: 5s
-      retries: 5
+  # db:
+  #   image: postgres:latest
+  #   restart: always
+  #   shm_size: '1gb'  # Augmenté pour de meilleures performances
+  #   volumes:
+  #     # Volume persistant pour les données
+  #     - postgres_data:/var/lib/postgresql/data
+  #     # Volume pour les sauvegardes
+  #     - postgres_backups:/backups
+  #   environment:
+  #     POSTGRES_DB: postgres
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: Bonjour3030!
+  #   ports:
+  #     # Port uniquement accessible depuis la VM
+  #     # - "127.0.0.1:5432:5432"
+  #     # local
+  #     - "5432:5432"
+  #   networks:
+  #     - data_app_network
+  #   # Vérifie régulièrement si la base de données est opérationnelle
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 60s
+  #     timeout: 5s
+  #     retries: 5
 
   # Deuxième service pour l'interface d'administration de la base de données
   adminer:
@@ -39,8 +39,8 @@ services:
       - 8080:8080
     networks:
       - data_app_network
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
     environment:
       ADMINER_DEFAULT_SERVER: "168.138.69.233:5432/"
       ADMINER_DESIGN: nette # Theme plus moderne
@@ -81,8 +81,8 @@ services:
         python manage.py populate_markets && 
         python manage.py run_back '1d'
       "
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
 
   # Service pour le backend Django
   api:
@@ -105,7 +105,7 @@ services:
         python manage.py runserver 0.0.0.0:8001
       "
     depends_on:
-      - db
+      # - db
       - back
 
   front:
