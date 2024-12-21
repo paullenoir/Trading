@@ -239,3 +239,96 @@ jobs:
 
             # Nettoyer les images et conteneurs inutiles
             sudo docker system prune -af
+
+
+# name: Deploy to VM
+
+# on:
+#   workflow_run:
+#     workflows: ["Build and Push Images"]
+#     types:
+#       - completed
+#     branches:
+#       - master
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Install Docker on VM and prepare environment
+#         uses: appleboy/ssh-action@v0.1.8
+#         with:
+#           host: ${{ secrets.ORACLE_VM_IP }}
+#           username: ${{ secrets.ORACLE_VM_USER }}
+#           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           script: |
+#             # Monter le volume
+#             if [ ! -d "/mnt/data" ]; then
+#               sudo mkdir -p /mnt/data
+#             fi
+            
+#             if ! mountpoint -q /mnt/data; then
+#               sudo mount /dev/sdal /mnt/data || echo "Volume déjà monté"
+#             fi
+            
+#             sudo chown -R $USER:$USER /mnt/data
+#             sudo chmod -R 755 /mnt/data
+            
+#             # Installation Docker si nécessaire
+#             if ! command -v docker &>/dev/null; then
+#               sudo apt-get update && sudo apt-get install -y docker.io
+#             fi
+            
+#             # Installation Docker Compose si nécessaire
+#             if ! command -v docker-compose &>/dev/null; then
+#               sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+#               sudo chmod +x /usr/local/bin/docker-compose
+#             fi
+            
+#             # Configuration du conteneur PostgreSQL si nécessaire
+#             if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
+#               sudo docker run --name db \
+#                 -e POSTGRES_DB=postgres \
+#                 -e POSTGRES_USER=postgres \
+#                 -e POSTGRES_PASSWORD=Bonjour3030! \
+#                 -p 5432:5432 \
+#                 -v db_data:/var/lib/postgresql/data \
+#                 --restart always \
+#                 --shm-size=1g \
+#                 -d postgres:latest
+#             fi
+
+#       - name: Login to GitHub Container Registry on VM
+#         uses: appleboy/ssh-action@v0.1.8
+#         with:
+#           host: ${{ secrets.ORACLE_VM_IP }}
+#           username: ${{ secrets.ORACLE_VM_USER }}
+#           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           script: |
+#             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+#       - name: Deploy to VM
+#         uses: appleboy/ssh-action@v0.1.8
+#         with:
+#           host: ${{ secrets.ORACLE_VM_IP }}
+#           username: ${{ secrets.ORACLE_VM_USER }}
+#           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           script: |
+#             cd /mnt/data
+            
+#             # Pull latest images
+#             sudo docker pull ghcr.io/${{ github.repository }}/trading-back:latest
+#             sudo docker pull ghcr.io/${{ github.repository }}/trading-api:latest
+#             sudo docker pull ghcr.io/${{ github.repository }}/trading-front:latest
+            
+#             # Deploy using docker-compose
+#             sudo docker-compose down
+#             sudo docker-compose up -d
+            
+#             # Cleanup
+#             sudo docker system prune -af
