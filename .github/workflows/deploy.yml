@@ -352,8 +352,9 @@ jobs:
             cd /mnt/data
 
             # Arrêter et supprimer les conteneurs existants, ainsi que les images
-            sudo docker ps -a -q | xargs sudo docker rm -f
-            sudo docker images -q | xargs sudo docker rmi -f
+            # A faire dans putty
+            # sudo docker ps -a -q | xargs sudo docker rm -f
+            # sudo docker images -q | xargs sudo docker rmi -f
 
             # Deploy using docker-compose
             sudo docker-compose up -d
