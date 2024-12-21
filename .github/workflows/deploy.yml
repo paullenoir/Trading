@@ -312,6 +312,36 @@ jobs:
           script: |
             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Transfer Docker images to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          port: 22
+          source: |
+            docker-compose.yml
+          target: "/mnt/data"
+          strip_components: 0
+          debug: true
+
+      # Fixer les permissions après transfert des fichiers
+      - name: Fix permissions on transferred files
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            cd /mnt/data
+            sudo chmod -R 644 *.yml
+            sudo chmod +x *.yml
+            ls -l
+            # DANS VM avec putty
+            sudo usermod -aG docker ubuntu
+            ls -l /var/run/docker.sock
+            sudo chmod 666 /var/run/docker.sock
+
       - name: Deploy to VM
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -320,10 +350,9 @@ jobs:
           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
           script: |
             cd /mnt/data
-            
+
+            # Arrêter et supprimer les conteneurs existants, ainsi que les images
+            sudo docker-compose down --rmi all
+
             # Deploy using docker-compose
-            sudo docker-compose down
             sudo docker-compose up -d
-            
-            # Cleanup
-            sudo docker system prune -af
