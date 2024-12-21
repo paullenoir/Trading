@@ -1,297 +1,101 @@
-name: Deploy Trading Application
-
-on:
-  push:
-    branches:
-      - master
-
-concurrency:
-  group: master
-  cancel-in-progress: true
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      # 1. Extraire le code dans un environnement GitHub Action
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # Afficher la structure des fichiers pour validation
-      - name: Display repository structure
-        run: |
-          pwd
-          ls -R
-
-      # Vérification des permissions pour les fichiers et répertoires
-      - name: Check and Fix Permissions
-        run: |
-          echo "Vérification des permissions dans le répertoire de travail"
-          chmod -R u+rw .
-          ls -l
-
-      # Installer Docker et Docker Compose sur la VM distante (volume spécifique /dev/sdal)
-      - name: Install Docker and Docker Compose on /dev/sdal
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          script: |
-            # Monter le volume à /mnt/data
-            if [ ! -d "/mnt/data" ]; then
-              echo "Création du répertoire /mnt/data..."
-              sudo mkdir -p /mnt/data
-            fi
-      
-            if ! mountpoint -q /mnt/data; then
-              echo "Montage du volume /dev/sdal sur /mnt/data..."
-              sudo mount /dev/sdal /mnt/data || echo "Volume /dev/sdal déjà monté ou introuvable"
-            else
-              echo "/mnt/data est déjà monté."
-            fi
-      
-            # Configurer les permissions pour le répertoire cible
-            echo "Configuration des permissions pour /mnt/data..."
-            sudo chown -R $USER:$USER /mnt/data
-            sudo chmod -R 755 /mnt/data
-            sudo rm -rf /mnt/data/*
-      
-            # Vérifier si Docker est installé
-            if ! command -v docker &>/dev/null; then
-              echo "Docker non installé. Installation de Docker..."
-              sudo apt-get update && sudo apt-get install -y docker.io
-            else
-              echo "Docker est déjà installé : $(docker --version)"
-            fi
-      
-            # Vérifier si Docker Compose est installé
-            if ! command -v docker-compose &>/dev/null; then
-              echo "Docker Compose non installé. Installation de Docker Compose..."
-              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            else
-              echo "Docker Compose est déjà installé : $(docker-compose --version)"
-            fi
-      
-            # Vérifier les installations
-            docker --version
-            docker-compose --version
-      
-            # Nettoyer les conteneurs et images Docker
-            if [ -n "$(sudo docker ps -a -q)" ]; then
-              echo "Suppression des anciens conteneurs (sauf 'db' utilisant l'image 'postgres')..."
-              # sudo docker ps -a -q | xargs sudo docker rm -f
-              sudo docker ps -a --format "{{.ID}} {{.Image}} {{.Names}}" | grep -v "postgres" | grep -v "db" | awk '{print $1}' | xargs -r sudo docker rm -f
-            fi
-
-            if [ -n "$(sudo docker images -q)" ]; then
-              echo "Suppression des anciennes images (sauf 'postgres')..."
-              # sudo docker images -q | xargs sudo docker rmi -f
-              sudo docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres" | awk '{print $1}' | xargs -r sudo docker rmi -f
-            fi
-
-            # Vérifier si le conteneur 'db' existe
-            if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
-              echo "Le conteneur 'db' n'existe pas. Création du conteneur..."
-              sudo docker run --name db \
-                -e POSTGRES_DB=postgres \
-                -e POSTGRES_USER=postgres \
-                -e POSTGRES_PASSWORD=Bonjour3030! \
-                -p 5432:5432 \
-                -v db_data:/var/lib/postgresql/data \
-                --restart always \
-                --shm-size=1g \
-                -d postgres:latest
-            else
-              echo "Le conteneur 'db' existe déjà."
-            fi
-
-            # Attente jusqu'à ce que le conteneur 'db' soit en état 'running'
-            echo "En attente que le conteneur 'db' soit en état 'running'..."
-            while [ "$(sudo docker inspect -f '{{.State.Running}}' db)" != "true" ]; do
-              echo "Le conteneur 'db' n'est pas encore prêt. Nouvelle vérification dans 2 secondes..."
-              sleep 2
-            done
-
-            echo "Le conteneur 'db' est maintenant en état 'running'."
-
-      # Build des images Docker localement
-      - name: Build Backend Image
-        working-directory: Back/trading_back_v2
-        run: |
-          docker build -t trading-back -f Dockerfile .
-
-      - name: Build API Image
-        working-directory: API_trading
-        run: |
-          docker build -t trading-api -f Dockerfile .
-
-      - name: Build Frontend Image
-        working-directory: Front/trading_front
-        run: |
-          docker build -t trading-front -f Dockerfile .
-
-      # Sauvegarder les images Docker en fichiers .tar
-      - name: Save Docker images
-        run: |
-          docker save -o trading-back.tar trading-back
-          chmod 644 trading-back.tar
-          docker save -o trading-api.tar trading-api
-          chmod 644 trading-api.tar
-          docker save -o trading-front.tar trading-front
-          chmod 644 trading-front.tar
-
-      - name: Debug file transfer
-        run: |
-          echo "Contenu du répertoire :"
-          pwd
-          ls -lh
-          
-          echo "Vérification des fichiers à transférer :"
-          test -f trading-back.tar && echo "trading-back.tar existe" || echo "trading-back.tar MANQUANT"
-          test -f trading-api.tar && echo "trading-api.tar existe" || echo "trading-api.tar MANQUANT"
-          test -f trading-front.tar && echo "trading-front.tar existe" || echo "trading-front.tar MANQUANT"
-          test -f docker-compose.yml && echo "docker-compose.yml existe" || echo "docker-compose.yml MANQUANT"
-          
-          echo "Tailles des fichiers :"
-          du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
-
-      - name: Test SSH Connection
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          port: 22
-          script: |
-            echo "Connexion SSH réussie"
-            hostname
-            whoami
-
-      - name: Transfer Docker images to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          port: 22
-          source: |
-            trading-back.tar,
-            trading-api.tar,
-            trading-front.tar,
-            docker-compose.yml
-          target: "/mnt/data"
-          strip_components: 0
-          debug: true
-
-      # Fixer les permissions après transfert des fichiers
-      - name: Fix permissions on transferred files
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          script: |
-            cd /mnt/data
-            sudo chmod -R 644 *.tar *.yml
-            sudo chmod +x *.tar *.yml
-            ls -l
-            # DANS VM avec putty
-            sudo usermod -aG docker ubuntu
-            ls -l /var/run/docker.sock
-            sudo chmod 666 /var/run/docker.sock
-
-      # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
-      - name: Deploy on VM
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.ORACLE_VM_IP }}
-          username: ${{ secrets.ORACLE_VM_USER }}
-          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
-          script: |
-            cd /mnt/data
-
-            # Arrêter et supprimer les conteneurs existants, ainsi que les images
-            sudo docker-compose down --rmi all
-
-            # Charger les images Docker
-            sudo docker load -i trading-back.tar
-            sudo docker load -i trading-api.tar
-            sudo docker load -i trading-front.tar
-
-            # Vérifier la configuration du fichier docker-compose
-            sudo chmod 644 docker-compose.yml
-            sudo docker-compose config
-            sudo docker images
-
-            #Requis pour builder BD
-            sudo apt update
-            sudo apt install postgresql-client
-            sudo ufw status
-            sudo ufw allow 5432
-            sudo ufw reload
-
-            # Redémarrer les services
-            sudo docker-compose up -d
-
-            # Nettoyer les images et conteneurs inutiles
-            sudo docker system prune -af
-
-
-# name: Deploy to VM
+# name: Deploy Trading Application
 
 # on:
-#   workflow_run:
-#     workflows: ["Build and Push Images"]
-#     types:
-#       - completed
+#   push:
 #     branches:
 #       - master
+
+# concurrency:
+#   group: master
+#   cancel-in-progress: true
 
 # jobs:
 #   deploy:
 #     runs-on: ubuntu-latest
-#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    
 #     steps:
+#       # 1. Extraire le code dans un environnement GitHub Action
 #       - name: Checkout code
 #         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
 
-#       - name: Install Docker on VM and prepare environment
+#       # Afficher la structure des fichiers pour validation
+#       - name: Display repository structure
+#         run: |
+#           pwd
+#           ls -R
+
+#       # Vérification des permissions pour les fichiers et répertoires
+#       - name: Check and Fix Permissions
+#         run: |
+#           echo "Vérification des permissions dans le répertoire de travail"
+#           chmod -R u+rw .
+#           ls -l
+
+#       # Installer Docker et Docker Compose sur la VM distante (volume spécifique /dev/sdal)
+#       - name: Install Docker and Docker Compose on /dev/sdal
 #         uses: appleboy/ssh-action@v0.1.8
 #         with:
 #           host: ${{ secrets.ORACLE_VM_IP }}
 #           username: ${{ secrets.ORACLE_VM_USER }}
 #           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
 #           script: |
-#             # Monter le volume
+#             # Monter le volume à /mnt/data
 #             if [ ! -d "/mnt/data" ]; then
+#               echo "Création du répertoire /mnt/data..."
 #               sudo mkdir -p /mnt/data
 #             fi
-            
+      
 #             if ! mountpoint -q /mnt/data; then
-#               sudo mount /dev/sdal /mnt/data || echo "Volume déjà monté"
+#               echo "Montage du volume /dev/sdal sur /mnt/data..."
+#               sudo mount /dev/sdal /mnt/data || echo "Volume /dev/sdal déjà monté ou introuvable"
+#             else
+#               echo "/mnt/data est déjà monté."
 #             fi
-            
+      
+#             # Configurer les permissions pour le répertoire cible
+#             echo "Configuration des permissions pour /mnt/data..."
 #             sudo chown -R $USER:$USER /mnt/data
 #             sudo chmod -R 755 /mnt/data
-            
-#             # Installation Docker si nécessaire
+#             sudo rm -rf /mnt/data/*
+      
+#             # Vérifier si Docker est installé
 #             if ! command -v docker &>/dev/null; then
+#               echo "Docker non installé. Installation de Docker..."
 #               sudo apt-get update && sudo apt-get install -y docker.io
+#             else
+#               echo "Docker est déjà installé : $(docker --version)"
 #             fi
-            
-#             # Installation Docker Compose si nécessaire
+      
+#             # Vérifier si Docker Compose est installé
 #             if ! command -v docker-compose &>/dev/null; then
+#               echo "Docker Compose non installé. Installation de Docker Compose..."
 #               sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 #               sudo chmod +x /usr/local/bin/docker-compose
+#             else
+#               echo "Docker Compose est déjà installé : $(docker-compose --version)"
 #             fi
-            
-#             # Configuration du conteneur PostgreSQL si nécessaire
+      
+#             # Vérifier les installations
+#             docker --version
+#             docker-compose --version
+      
+#             # Nettoyer les conteneurs et images Docker
+#             if [ -n "$(sudo docker ps -a -q)" ]; then
+#               echo "Suppression des anciens conteneurs (sauf 'db' utilisant l'image 'postgres')..."
+#               # sudo docker ps -a -q | xargs sudo docker rm -f
+#               sudo docker ps -a --format "{{.ID}} {{.Image}} {{.Names}}" | grep -v "postgres" | grep -v "db" | awk '{print $1}' | xargs -r sudo docker rm -f
+#             fi
+
+#             if [ -n "$(sudo docker images -q)" ]; then
+#               echo "Suppression des anciennes images (sauf 'postgres')..."
+#               # sudo docker images -q | xargs sudo docker rmi -f
+#               sudo docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres" | awk '{print $1}' | xargs -r sudo docker rmi -f
+#             fi
+
+#             # Vérifier si le conteneur 'db' existe
 #             if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
+#               echo "Le conteneur 'db' n'existe pas. Création du conteneur..."
 #               sudo docker run --name db \
 #                 -e POSTGRES_DB=postgres \
 #                 -e POSTGRES_USER=postgres \
@@ -301,18 +105,90 @@ jobs:
 #                 --restart always \
 #                 --shm-size=1g \
 #                 -d postgres:latest
+#             else
+#               echo "Le conteneur 'db' existe déjà."
 #             fi
 
-#       - name: Login to GitHub Container Registry on VM
+#             # Attente jusqu'à ce que le conteneur 'db' soit en état 'running'
+#             echo "En attente que le conteneur 'db' soit en état 'running'..."
+#             while [ "$(sudo docker inspect -f '{{.State.Running}}' db)" != "true" ]; do
+#               echo "Le conteneur 'db' n'est pas encore prêt. Nouvelle vérification dans 2 secondes..."
+#               sleep 2
+#             done
+
+#             echo "Le conteneur 'db' est maintenant en état 'running'."
+
+#       # Build des images Docker localement
+#       - name: Build Backend Image
+#         working-directory: Back/trading_back_v2
+#         run: |
+#           docker build -t trading-back -f Dockerfile .
+
+#       - name: Build API Image
+#         working-directory: API_trading
+#         run: |
+#           docker build -t trading-api -f Dockerfile .
+
+#       - name: Build Frontend Image
+#         working-directory: Front/trading_front
+#         run: |
+#           docker build -t trading-front -f Dockerfile .
+
+#       # Sauvegarder les images Docker en fichiers .tar
+#       - name: Save Docker images
+#         run: |
+#           docker save -o trading-back.tar trading-back
+#           chmod 644 trading-back.tar
+#           docker save -o trading-api.tar trading-api
+#           chmod 644 trading-api.tar
+#           docker save -o trading-front.tar trading-front
+#           chmod 644 trading-front.tar
+
+#       - name: Debug file transfer
+#         run: |
+#           echo "Contenu du répertoire :"
+#           pwd
+#           ls -lh
+          
+#           echo "Vérification des fichiers à transférer :"
+#           test -f trading-back.tar && echo "trading-back.tar existe" || echo "trading-back.tar MANQUANT"
+#           test -f trading-api.tar && echo "trading-api.tar existe" || echo "trading-api.tar MANQUANT"
+#           test -f trading-front.tar && echo "trading-front.tar existe" || echo "trading-front.tar MANQUANT"
+#           test -f docker-compose.yml && echo "docker-compose.yml existe" || echo "docker-compose.yml MANQUANT"
+          
+#           echo "Tailles des fichiers :"
+#           du -h trading-back.tar trading-api.tar trading-front.tar docker-compose.yml || true
+
+#       - name: Test SSH Connection
 #         uses: appleboy/ssh-action@v0.1.8
 #         with:
 #           host: ${{ secrets.ORACLE_VM_IP }}
 #           username: ${{ secrets.ORACLE_VM_USER }}
 #           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           port: 22
 #           script: |
-#             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#             echo "Connexion SSH réussie"
+#             hostname
+#             whoami
 
-#       - name: Deploy to VM
+#       - name: Transfer Docker images to VM
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: ${{ secrets.ORACLE_VM_IP }}
+#           username: ${{ secrets.ORACLE_VM_USER }}
+#           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           port: 22
+#           source: |
+#             trading-back.tar,
+#             trading-api.tar,
+#             trading-front.tar,
+#             docker-compose.yml
+#           target: "/mnt/data"
+#           strip_components: 0
+#           debug: true
+
+#       # Fixer les permissions après transfert des fichiers
+#       - name: Fix permissions on transferred files
 #         uses: appleboy/ssh-action@v0.1.8
 #         with:
 #           host: ${{ secrets.ORACLE_VM_IP }}
@@ -320,15 +196,134 @@ jobs:
 #           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
 #           script: |
 #             cd /mnt/data
-            
-#             # Pull latest images
-#             sudo docker pull ghcr.io/${{ github.repository }}/trading-back:latest
-#             sudo docker pull ghcr.io/${{ github.repository }}/trading-api:latest
-#             sudo docker pull ghcr.io/${{ github.repository }}/trading-front:latest
-            
-#             # Deploy using docker-compose
-#             sudo docker-compose down
+#             sudo chmod -R 644 *.tar *.yml
+#             sudo chmod +x *.tar *.yml
+#             ls -l
+#             # DANS VM avec putty
+#             sudo usermod -aG docker ubuntu
+#             ls -l /var/run/docker.sock
+#             sudo chmod 666 /var/run/docker.sock
+
+#       # Charger les images Docker et déployer sur la VM dans le volume /mnt/data
+#       - name: Deploy on VM
+#         uses: appleboy/ssh-action@v0.1.8
+#         with:
+#           host: ${{ secrets.ORACLE_VM_IP }}
+#           username: ${{ secrets.ORACLE_VM_USER }}
+#           key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+#           script: |
+#             cd /mnt/data
+
+#             # Arrêter et supprimer les conteneurs existants, ainsi que les images
+#             sudo docker-compose down --rmi all
+
+#             # Charger les images Docker
+#             sudo docker load -i trading-back.tar
+#             sudo docker load -i trading-api.tar
+#             sudo docker load -i trading-front.tar
+
+#             # Vérifier la configuration du fichier docker-compose
+#             sudo chmod 644 docker-compose.yml
+#             sudo docker-compose config
+#             sudo docker images
+
+#             #Requis pour builder BD
+#             sudo apt update
+#             sudo apt install postgresql-client
+#             sudo ufw status
+#             sudo ufw allow 5432
+#             sudo ufw reload
+
+#             # Redémarrer les services
 #             sudo docker-compose up -d
-            
-#             # Cleanup
+
+#             # Nettoyer les images et conteneurs inutiles
 #             sudo docker system prune -af
+
+
+name: Deploy to VM
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Images"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Docker on VM and prepare environment
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            # Monter le volume
+            if [ ! -d "/mnt/data" ]; then
+              sudo mkdir -p /mnt/data
+            fi
+            
+            if ! mountpoint -q /mnt/data; then
+              sudo mount /dev/sdal /mnt/data || echo "Volume déjà monté"
+            fi
+            
+            sudo chown -R $USER:$USER /mnt/data
+            sudo chmod -R 755 /mnt/data
+            
+            # Installation Docker si nécessaire
+            if ! command -v docker &>/dev/null; then
+              sudo apt-get update && sudo apt-get install -y docker.io
+            fi
+            
+            # Installation Docker Compose si nécessaire
+            if ! command -v docker-compose &>/dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+            
+            # # Configuration du conteneur PostgreSQL si nécessaire
+            # if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
+            #   sudo docker run --name db \
+            #     -e POSTGRES_DB=postgres \
+            #     -e POSTGRES_USER=postgres \
+            #     -e POSTGRES_PASSWORD=Bonjour3030! \
+            #     -p 5432:5432 \
+            #     -v db_data:/var/lib/postgresql/data \
+            #     --restart always \
+            #     --shm-size=1g \
+            #     -d postgres:latest
+            # fi
+
+      - name: Login to GitHub Container Registry on VM
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.ORACLE_VM_IP }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            cd /mnt/data
+            
+            # Deploy using docker-compose
+            sudo docker-compose down
+            sudo docker-compose up -d
+            
+            # Cleanup
+            sudo docker system prune -af
