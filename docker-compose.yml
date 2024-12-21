@@ -63,7 +63,7 @@ services:
   # docker logs trading-back-1     
   back:
     # image: trading-back:latest
-    image: ghcr.io/paullenoir/Trading/trading-back:latest
+    image: ghcr.io/paullenoir/trading/trading-back:latest
     restart: always
     # environment:
     #   POSTGRES_DB: ${POSTGRES_DB}
@@ -87,7 +87,7 @@ services:
   # Service pour le backend Django
   api:
     # image: trading-api:latest
-    image: ghcr.io/paullenoir/Trading/trading-api:latest
+    image: ghcr.io/paullenoir/trading/trading-api:latest
     restart: always
     # environment:
     #   POSTGRES_DB: ${POSTGRES_DB}
@@ -110,7 +110,7 @@ services:
 
   front:
     # image: trading-front:latest
-    image: ghcr.io/paullenoir/Trading/trading-front:latest
+    image: ghcr.io/paullenoir/trading/trading-front:latest
     restart: always
     ports:
       - "80:80"  # Exposition du port 80 pour servir l'application web
