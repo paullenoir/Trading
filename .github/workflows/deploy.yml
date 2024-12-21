@@ -289,19 +289,6 @@ jobs:
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
-            
-            # # Configuration du conteneur PostgreSQL si nécessaire
-            # if [ -z "$(sudo docker ps -a --filter name=db --format '{{.Names}}')" ]; then
-            #   sudo docker run --name db \
-            #     -e POSTGRES_DB=postgres \
-            #     -e POSTGRES_USER=postgres \
-            #     -e POSTGRES_PASSWORD=Bonjour3030! \
-            #     -p 5432:5432 \
-            #     -v db_data:/var/lib/postgresql/data \
-            #     --restart always \
-            #     --shm-size=1g \
-            #     -d postgres:latest
-            # fi
 
       - name: Login to GitHub Container Registry on VM
         uses: appleboy/ssh-action@v0.1.8
@@ -357,4 +344,4 @@ jobs:
             # sudo docker images -q | xargs sudo docker rmi -f
 
             # Deploy using docker-compose
-            sudo docker-compose up -d
+            # sudo docker-compose up -d
