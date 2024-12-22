@@ -6,18 +6,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         initial_markets = [
-            'NVDA.NE',  # NVIDIA 
-            'PG.NE',  # The Procter & Gamble Company
-            'AMZN.NE',  # Amazon.com, Inc
-            'JNJ.NE',  # JOHNSON & JOHNSON CDR
-            'AAPL.NE',  # Apple Inc.
-            'MCDS.NE',  # McDonald's Corporation
-            'MSFT.NE',  # Microsoft Corporation 
-            'NFLX.NE',  # Netflix, Inc.
-            'COLA.NE',  # The Coca-Cola Company
-            'EBIT.TO',  # Bitcoin ETF CAD
-            'VFV.TO',  # Vanguard S&P 500 Index ETF 
-            'BRK.NE'  # Berkshire Hathaway Inc.
+            'NVDA.NE',  # NVIDIA - Électronique et semi-conducteurs
+            'PG.NE',  # The Procter & Gamble Company - Produits de consommation
+            'AMZN.NE',  # Amazon.com, Inc - E-commerce et services cloud
+            'JNJ.NE',  # Johnson & Johnson CDR - Pharmaceutique et dispositifs médicaux
+            'AAPL.NE',  # Apple Inc. - Technologie et électronique grand public
+            'MCDS.NE',  # McDonald's Corporation - Restauration rapide
+            'MSFT.NE',  # Microsoft Corporation - Technologie et services logiciels
+            'NFLX.NE',  # Netflix, Inc. - Streaming et production de contenu
+            'COLA.NE',  # The Coca-Cola Company - Alimentaire et boissons
+            'EBIT.TO',  # Bitcoin ETF CAD - Fonds négocié en bourse, crypto-monnaie
+            'VFV.TO',  # Vanguard S&P 500 Index ETF - Fonds indiciel
+            'BRK.NE',  # Berkshire Hathaway Inc. - Holding diversifiée
+            'LLY.NE',  # Eli Lilly and Company - Pharmaceutique
+            'BA.NE',  # The Boeing Company - Aéronautique et défense
+            'RTX.NE',  # Raytheon Technologies Corporation - Aéronautique et défense
+            'BBU-UN-TO',  # Brookfield Business Partners L.P. - Gestion d'actifs et infrastructures
         ]
         
         for market_name in initial_markets:
