@@ -47,7 +47,7 @@ def create_market_price(data, market, interval):
             'high_price': round(row['High'], 4),
             'open_price': round(row['Open'], 4),
             'close_price': round(row['Close'], 4),
-            'adj_close': round(row['Adj Close'], 4) if 'Adj Close' in row else None,
+            'adj_close': round(row['Adj Close'], 4) if 'Adj Close' in row else 0,
             'volume': row['Volume']
         }
 
