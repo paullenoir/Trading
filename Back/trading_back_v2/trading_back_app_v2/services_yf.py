@@ -8,6 +8,7 @@ def download_and_process_data(market: str, interval: str) -> pd.DataFrame:
     print(f"Téléchargement des données pour : {market} avec intervalle {interval}")       
     if interval == "1d":
         data = yf.download(market, period="max", interval=interval) # Téléchargement des données via yfinance pour chaque action
+        print(data)
         data = validate_dataframe(data)
     else:
         end_date = datetime.today()  # Date actuelle
@@ -39,6 +40,7 @@ def validate_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 def create_market_price(data, market, interval):
     # Traitement des données de marché pour chaque symbole
     for index, row in data.iterrows():
+        print(row)
         market_price = {
             'market': market,
             'interval': interval,
