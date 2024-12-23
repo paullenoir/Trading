@@ -1,32 +1,50 @@
 <h2>Historique des Trades pour {{allQueryParams['market']}} avec l'interval {{ allQueryParams['interval'] }} avec la strategie {{ allQueryParams['strategy'] }}</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Date Start</th>
-      <th>Date End</th>
-      <th>Strategy Parameter</th>
-      <th>Buy Price</th>
-      <th>Sell Price</th>
-      <th>Dollars Profit</th>
-      <th>Percent Profit</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let trade of historiqueTrade"   [ngClass]="{
-      'positive-profit': trade.dollars_profit !== '0' && !trade.dollars_profit.startsWith('-'),
-      'negative-profit': trade.dollars_profit.startsWith('-'),
-      'ongoing-trade': !trade.sell_price
-    }">
-      <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_start | date: 'yyyy-MM-dd') : (trade.date_start | date: 'yyyy-MM-dd HH:mm') }}</td>
-      <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_end | date: 'yyyy-MM-dd') : (trade.date_end | date: 'yyyy-MM-dd HH:mm') }}</td>
-      <td>{{ trade.strategyParameter }}</td>
-      <td>{{ trade.buy_price | number: '1.2-2'}}</td>
-      <td>{{ trade.sell_price | number: '1.2-2'}}</td>
-      <td>{{ trade.dollars_profit | number: '1.2-2'}}</td>
-      <td>{{ trade.percent_profit | number: '1.2-2'}}</td>
-    </tr>
-  </tbody>
-</table>
+<div style="display: flex; align-items: flex-start; gap: 20px; width: 100%;">
+  <table>
+    <thead>
+      <tr>
+        <th>Date Start</th>
+        <th>Date End</th>
+        <th>Strategy Parameter</th>
+        <th>Buy Price</th>
+        <th>Sell Price</th>
+        <th>Dollars Profit</th>
+        <th>Percent Profit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let trade of historiqueTrade"   [ngClass]="{
+        'positive-profit': trade.dollars_profit !== '0' && !trade.dollars_profit.startsWith('-'),
+        'negative-profit': trade.dollars_profit.startsWith('-'),
+        'ongoing-trade': !trade.sell_price
+      }">
+        <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_start | date: 'yyyy-MM-dd') : (trade.date_start | date: 'yyyy-MM-dd HH:mm') }}</td>
+        <td>{{ allQueryParams['interval'] === '1d' ? (trade.date_end | date: 'yyyy-MM-dd') : (trade.date_end | date: 'yyyy-MM-dd HH:mm') }}</td>
+        <td>{{ trade.strategyParameter }}</td>
+        <td>{{ trade.buy_price | number: '1.2-2'}}</td>
+        <td>{{ trade.sell_price | number: '1.2-2'}}</td>
+        <td>{{ trade.dollars_profit | number: '1.2-2'}}</td>
+        <td>{{ trade.percent_profit | number: '1.2-2'}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Total Dollars Profit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr [ngClass]="{
+        'positive-profit': calculateTotalDollarsProfit() >= 0,
+        'negative-profit': calculateTotalDollarsProfit() < 0
+      }">
+        <td>{{ calculateTotalDollarsProfit() | number: '1.2-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <h2>Graphique de Marché AAPL</h2>
 <div>
