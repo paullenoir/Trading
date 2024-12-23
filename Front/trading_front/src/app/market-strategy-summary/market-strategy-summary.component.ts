@@ -119,6 +119,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     } 
     else if (strategy === 'macd') {
       this.apiservice.getIndicatorMACD(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
@@ -130,6 +131,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     } 
     else if (strategy === 'ichimoku') {
       this.apiservice.getIndicatorIchimoku(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
@@ -141,6 +143,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     }
     else if (strategy === '2MM') {
       let jsonString = JSON.stringify(data, (key, value) => {
@@ -159,6 +162,8 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+
+      
     }
     else if (strategy === 'bollingerband') {
       this.apiservice.getIndicatorBollingerBand(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
@@ -170,6 +175,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     }
     else if (strategy === 'rsi') {
       this.apiservice.getIndicatorRSI(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
@@ -181,6 +187,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     } 
     else if (strategy === 'stochastic') {
       this.apiservice.getIndicatorStochastic(this.allQueryParams['market'], this.allQueryParams['interval']).subscribe({
@@ -192,6 +199,7 @@ export class MarketStrategySummaryComponent{
           console.error('Erreur lors de la récupération des résumés de marché', err);
         }
       });
+      
     }
   }
 
@@ -1211,7 +1219,7 @@ export class MarketStrategySummaryComponent{
               }
           };
       })
-      },
+    },
       grid: {
         row: {
           colors: ['#f3f3f3', 'transparent'], // Couleurs alternées pour chaque ligne
@@ -1281,5 +1289,11 @@ export class MarketStrategySummaryComponent{
       }
   };
   
+  }
+
+  calculateTotalDollarsProfit(): number {
+    return this.historiqueTrade
+      .map(trade => parseFloat(trade.dollars_profit) || 0) // Convertit en nombre et gère les valeurs non valides
+      .reduce((total, profit) => total + profit, 0); // Calcule la somme totale
   }
 }

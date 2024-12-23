@@ -1,0 +1,68 @@
+docker-compose down -v
+docker system prune -f
+docker volume prune -f
+docker logs -f trading-back-1
+docker logs -f trading-api-1
+python build_and_run.py
+
+python port-test.py
+taskkill /PID 10304 /F
+
+pip freeze > requirements.txt
+
+docker exec -it 1ff7dd29ab7d3be542625141 bash
+python manage.py run_back "1d"
+
+npm run build --configuration=production
+docker build -t trading-front:latest .
+docker run -d -p 80:80 --name trading-container trading-front
+docker exec -it trading-container sh
+
+docker build -t trading-api:latest .
+docker run -d -p 8001:8001 --name  api trading-api
+
+docker stop
+docker rm 
+docker rmi
+docker exec -it name sh
+docker run --name db -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=Bonjour3030! -p 5432:5432 -d postgres:latest
+
+
+docker exec -it db psql -U postgres
+\l
+\c postgres
+\q
+docker inspect <container_name_or_id>
+
+
+sauvegarder le code dans github
+C:\Users\paul\Desktop\BourseV2\Trading> git add .
+C:\Users\paul\Desktop\BourseV2\Trading> git commit -m 'deploy v5-2'
+C:\Users\paul\Desktop\BourseV2\Trading> git push
+
+creer branche dev dans github
+git branch           # Vérifie la branche actuelle
+git checkout -b dev  # Crée et bascule sur la branche `dev`
+git push -u origin dev  # (Optionnel) Pousse la branche sur le dépôt distant
+
+git checkout dev
+
+merge dev dans master de github
+git checkout master
+git merge dev
+git push origin master
+
+si conflit, resoud les manuellement puis
+git add <fichier>
+git commit
+git push origin master
+
+
+sudo docker ps -a -q | xargs sudo docker rm -v -f
+sudo docker images -q | xargs sudo docker rmi -f
+cd /mnt/data
+sudo rm docker-compose.yml
+
+docker logs name
+
+/tmp/crontab.Kc4uz3 se trouve le crontab
